@@ -1,4 +1,40 @@
 ---
+# Preflight Playbook
+#
+# This playbook performs initial system setup and verification for Chasm deployment.
+# It handles the following tasks:
+#
+# 1. System Updates
+#    - Updates all system packages
+#    - Installs common utilities and tools
+#    - Handles system reboots if needed
+#
+# 2. Controller Node Setup
+#    - Installs Docker CE and related packages
+#    - Configures Docker service
+#    - Sets up Docker user permissions
+#
+# 3. User Configuration
+#    - Creates installation user
+#    - Configures SSH access
+#    - Sets up sudo permissions
+#
+# Variables:
+#   - install_user: Username for installation (default: ansible)
+#   - install_uid: UID for installation user (default: 1000)
+#   - install_gid: GID for installation user (default: 1000)
+#   - common_packages: List of packages to install on all hosts
+#   - controller_packages: Additional packages for controller nodes
+#
+# Usage:
+#   ansible-playbook playbooks/preflight.yml -i inventory/hosts
+#
+# Dependencies:
+#   - Ansible 2.9+
+#   - Python 3.6+
+#   - SSH access to target systems
+#   - Passwordless sudo for initial user
+
 # Preflight checks and setup
 - name: Update system packages
   hosts: all

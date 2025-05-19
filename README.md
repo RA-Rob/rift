@@ -1,6 +1,10 @@
 # Chasm
 
-Chasm is an Ansible-based deployment management tool for Rocky Linux 9 and RHEL 9 systems. It provides a streamlined approach to deploying and managing both bare metal and cloud environments.
+Ansible-based deployment system for Rocky Linux 9 and RHEL 9 environments.
+
+## Overview
+
+Chasm is a deployment automation system that provides a standardized way to deploy and configure systems in both bare metal and cloud environments. It includes preflight checks, system configuration, and deployment capabilities.
 
 ## Features
 
@@ -33,8 +37,8 @@ Chasm is an Ansible-based deployment management tool for Rocky Linux 9 and RHEL 
 
 ## Prerequisites
 
-- Ansible 2.9 or later
-- Python 3.6 or later
+- Ansible 2.9 or higher
+- Python 3.6 or higher
 - SSH access to target systems
 - Passwordless sudo access for the installation user
 
@@ -73,7 +77,7 @@ Check the inventory structure and deployment type:
 
 Perform preflight checks and setup installation user:
 ```bash
-./tools/chasm preflight -k ~/.ssh/id_rsa.pub
+./tools/chasm preflight
 ```
 
 ### Deploy
@@ -105,6 +109,41 @@ Deploy Chasm to the target environment:
 1. Create a test inventory file
 2. Run preflight checks
 3. Verify the deployment
+
+## Variables
+
+### Common Variables
+
+- `install_user`: Installation user name (default: ansible)
+- `install_uid`: Installation user UID (default: 1000)
+- `install_gid`: Installation user GID (default: 1000)
+- `deployment_type`: Deployment type (baremetal/cloud)
+
+### Controller-specific Variables
+
+- `controller_packages`: Additional packages for controller nodes
+- `chasm.controller.api_port`: Controller API port
+- `chasm.controller.metrics_port`: Controller metrics port
+
+### Worker-specific Variables
+
+- `chasm.worker.controller_host`: Controller host address
+- `chasm.worker.controller_port`: Controller port
+
+## Security
+
+- SSH key-based authentication
+- Passwordless sudo for installation user
+- SELinux enabled by default
+- Docker security configurations
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to the branch
+5. Create a Pull Request
 
 ## License
 
