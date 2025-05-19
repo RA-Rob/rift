@@ -41,9 +41,47 @@ system_requirements:
 
 # Common packages
 common_packages:
+  # System utilities
   - epel-release
   - python3-pip
   - git
   - vim
   - htop
-  - net-tools 
+  - net-tools
+  # Kubernetes tools
+  - kubectl
+  - k9s
+  - helm
+  - kustomize
+  - kubectx
+  - kubens
+  - stern
+  - kubeseal
+  - kubeadm
+  - cri-tools
+  - containerd
+  - containerd.io
+  # Monitoring and debugging
+  - jq
+  - yq
+  - curl
+  - wget
+  - tcpdump
+  - sysstat
+  - iotop
+  - iftop
+  - nmap
+  - bind-utils
+  # Security tools
+  - openssl
+  - ca-certificates
+  - selinux-policy-utils
+  - policycoreutils-python-utils
+
+# Controller-specific packages
+controller_packages:
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+  - docker-buildx-plugin
+  - docker-compose-plugin 

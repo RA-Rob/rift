@@ -1,5 +1,125 @@
 ---
 # Preflight checks and setup
+- name: Update system packages
+  hosts: all
+  become: true
+  vars:
+    update_timeout: 1800  # 30 minutes timeout
+    excluded_packages:
+      - kernel
+      - kernel-core
+      - kernel-modules
+      - kernel-tools
+      - kernel-tools-libs
+  tasks:
+    - name: Check if reboot is required
+      stat:
+        path: /var/run/reboot-required
+      register: reboot_required
+      changed_when: false
+
+    - name: Update all packages
+      dnf:
+        name: "*"
+        state: latest
+        update_cache: yes
+        exclude: "{{ excluded_packages }}"
+      register: update_result
+      async: "{{ update_timeout }}"
+      poll: 0
+
+    - name: Wait for package update to complete
+      async_status:
+        jid: "{{ update_result.ansible_job_id }}"
+      register: update_status
+      until: update_status.finished
+      retries: 30
+      delay: 60
+      changed_when: false
+
+    - name: Check for update failures
+      fail:
+        msg: "Package update failed or timed out after {{ update_timeout }} seconds"
+      when: update_status.failed or not update_status.finished
+
+    - name: Install required packages
+      dnf:
+        name: "{{ common_packages }}"
+        state: present
+      register: package_install
+      changed_when: package_install.changed
+
+    - name: Check if reboot is needed
+      shell: needs-restarting -r
+      register: reboot_check
+      changed_when: false
+      failed_when: false
+      ignore_errors: true
+
+    - name: Reboot if required
+      reboot:
+        msg: "Reboot initiated by Ansible after system update"
+        connect_timeout: 5
+        reboot_timeout: 300
+        pre_reboot_delay: 0
+        post_reboot_delay: 30
+      when: reboot_check.rc == 1 or reboot_required.stat.exists
+
+    - name: Wait for system to come back online
+      wait_for_connection:
+        delay: 10
+        timeout: 300
+      when: reboot_check.rc == 1 or reboot_required.stat.exists
+
+- name: Setup Docker CE on controller
+  hosts: controller
+  become: true
+  tasks:
+    - name: Install required packages for Docker repository
+      dnf:
+        name:
+          - yum-utils
+          - device-mapper-persistent-data
+          - lvm2
+        state: present
+
+    - name: Add Docker CE repository
+      get_url:
+        url: https://download.docker.com/linux/centos/docker-ce.repo
+        dest: /etc/yum.repos.d/docker-ce.repo
+        mode: '0644'
+
+    - name: Install Docker CE packages
+      dnf:
+        name: "{{ controller_packages }}"
+        state: present
+        update_cache: yes
+
+    - name: Start and enable Docker service
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add installation user to docker group
+      user:
+        name: "{{ install_user }}"
+        groups: docker
+        append: yes
+
+    - name: Ensure Docker daemon is running
+      systemd:
+        name: docker
+        state: started
+      register: docker_start
+
+    - name: Wait for Docker daemon to be ready
+      wait_for:
+        path: /var/run/docker.sock
+        state: present
+        timeout: 30
+      when: docker_start.changed
+
 - name: Verify current user has sudo
   hosts: all
   gather_facts: false
