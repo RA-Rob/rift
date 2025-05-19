@@ -85,6 +85,9 @@ generate_inventory() {
         echo "ansible_python_interpreter=/usr/bin/python3"
         echo "ansible_distribution_major_version=9"
         echo "deployment_type=$deployment_type"
+        echo "install_user=$(prompt "Enter installation username" "ansible")"
+        echo "install_uid=$(prompt "Enter installation user UID" "1000")"
+        echo "install_gid=$(prompt "Enter installation user GID" "1000")"
         
     } > "$inventory_file"
     
