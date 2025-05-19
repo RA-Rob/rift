@@ -1,0 +1,105 @@
+---
+# Preflight checks and setup
+- name: Verify current user has sudo
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Check sudo access
+      command: sudo -n true
+      register: sudo_check
+      changed_when: false
+      failed_when: false
+
+    - name: Fail if no sudo access
+      fail:
+        msg: "Current user must have passwordless sudo access"
+      when: sudo_check.rc != 0
+
+- name: Create installation user
+  hosts: all
+  become: true
+  tasks:
+    - name: Create installation group
+      group:
+        name: "{{ install_group }}"
+        gid: "{{ install_gid }}"
+        state: present
+
+    - name: Create installation user
+      user:
+        name: "{{ install_user }}"
+        uid: "{{ install_uid }}"
+        group: "{{ install_group }}"
+        shell: /bin/bash
+        create_home: yes
+        state: present
+
+    - name: Ensure sudoers.d directory exists
+      file:
+        path: /etc/sudoers.d
+        state: directory
+        mode: '0755'
+
+    - name: Configure sudo access
+      copy:
+        content: "{{ install_user }} ALL=(ALL) NOPASSWD: ALL"
+        dest: "/etc/sudoers.d/{{ install_user }}"
+        mode: '0440'
+        validate: /usr/sbin/visudo -cf %s
+
+- name: Setup SSH access
+  hosts: all
+  become: true
+  become_user: "{{ install_user }}"
+  tasks:
+    - name: Ensure .ssh directory exists
+      file:
+        path: "~/.ssh"
+        state: directory
+        mode: '0700'
+
+    - name: Ensure authorized_keys file exists
+      file:
+        path: "~/.ssh/authorized_keys"
+        state: touch
+        mode: '0600'
+
+    - name: Add public key
+      lineinfile:
+        path: "~/.ssh/authorized_keys"
+        line: "{{ chasm_ssh_public_key }}"
+        state: present
+      when: chasm_ssh_public_key != ""
+
+    - name: Set SSH directory permissions
+      file:
+        path: "~/.ssh"
+        state: directory
+        mode: '0700'
+        recurse: yes
+
+- name: Verify installation user setup
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Test SSH connection
+      command: ssh -o BatchMode=yes -o ConnectTimeout=5 {{ install_user }}@{{ inventory_hostname }} echo "SSH connection successful"
+      register: ssh_test
+      changed_when: false
+      failed_when: false
+
+    - name: Test sudo access
+      command: ssh -o BatchMode=yes {{ install_user }}@{{ inventory_hostname }} sudo -n true
+      register: sudo_test
+      changed_when: false
+      failed_when: false
+
+    - name: Display verification results
+      debug:
+        msg: "Installation user verification completed"
+      when: ssh_test.rc == 0 and sudo_test.rc == 0
+
+    - name: Fail if verification failed
+      fail:
+        msg: "Installation user verification failed. Please check SSH and sudo access."
+      when: ssh_test.rc != 0 or sudo_test.rc != 0

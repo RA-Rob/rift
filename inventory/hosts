@@ -1,0 +1,11 @@
+[webservers]
+# Add your web servers here
+# Example: web1 ansible_host=192.168.1.10
+
+[databases]
+# Add your database servers here
+# Example: db1 ansible_host=192.168.1.20
+
+[all:vars]
+ansible_user=ansible
+ansible_python_interpreter=/usr/bin/python3 

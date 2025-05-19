@@ -1,0 +1,4 @@
+---
+# Placeholder for any common tasks you might add later
+- debug:
+    msg: "Common role applied to {{ inventory_hostname }}"

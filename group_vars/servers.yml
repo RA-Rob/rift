@@ -1,0 +1,3 @@
+# Variables specific to controller + workers
+install_user: "{{ install_user }}"
+ssh_key_file: "{{ ssh_key_file }}"

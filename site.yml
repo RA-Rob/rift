@@ -1,0 +1,22 @@
+---
+# Chasm deployment playbook
+- name: Configure base system
+  hosts: all
+  become: true
+  roles:
+    - common
+
+- name: Configure cloud-specific requirements
+  hosts: cloud
+  become: true
+  roles:
+    - cloud
+
+- name: Deploy Chasm
+  hosts: chasm_servers
+  become: true
+  roles:
+    - chasm
+  vars:
+    chasm_version: "latest"  # Can be overridden in group_vars or host_vars
+    deployment_type: "{{ deployment_type | default('standard') }}" 

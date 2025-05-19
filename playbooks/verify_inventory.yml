@@ -1,0 +1,36 @@
+---
+# Verify inventory structure and deployment type
+- name: Verify inventory structure
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Check deployment type
+      fail:
+        msg: "Invalid deployment_type. Must be either 'baremetal' or 'cloud'"
+      when: deployment_type not in ['baremetal', 'cloud']
+
+    - name: Verify controller count
+      fail:
+        msg: "There must be exactly one controller node"
+      when: groups['controller'] | length != 1
+
+    - name: Verify worker count
+      fail:
+        msg: "There must be at least one worker node"
+      when: groups['workers'] | length < 1
+
+    - name: Verify deployment type consistency
+      fail:
+        msg: "All hosts must be either baremetal or cloud, not mixed"
+      when: >
+        (deployment_type == 'baremetal' and groups['cloud'] | length > 0) or
+        (deployment_type == 'cloud' and groups['baremetal'] | length > 0)
+
+    - name: Display inventory summary
+      debug:
+        msg: |
+          Inventory Summary:
+          - Deployment Type: {{ deployment_type }}
+          - Controller: {{ groups['controller'] | join(', ') }}
+          - Workers: {{ groups['workers'] | join(', ') }}
+          - Total Hosts: {{ groups['all'] | length }} 

@@ -1,0 +1,49 @@
+---
+# Common variables for all hosts
+ansible_distribution: "{{ ansible_distribution | default('Rocky') }}"
+ansible_distribution_major_version: "9"
+deployment_type: "{{ deployment_type | default('baremetal') }}"
+
+# Installation user configuration
+install_user: "{{ install_user | default('ansible') }}"
+install_group: "{{ install_user | default('ansible') }}"
+install_uid: "{{ install_uid | default(1000) }}"
+install_gid: "{{ install_gid | default(1000) }}"
+# This should be overridden in a vault or secure location
+chasm_ssh_public_key: "{{ lookup('env', 'CHASM_SSH_PUBLIC_KEY') | default('') }}"
+
+# Chasm specific variables
+chasm:
+  install_dir: /opt/chasm
+  config_dir: /etc/chasm
+  log_dir: /var/log/chasm
+  user: chasm
+  group: chasm
+  controller:
+    enabled: "{{ 'controller' in group_names }}"
+    api_port: 8080
+    metrics_port: 9090
+  worker:
+    enabled: "{{ 'workers' in group_names }}"
+    controller_host: "{{ hostvars[groups['controller'][0]]['ansible_host'] | default('localhost') }}"
+    controller_port: 8080
+
+# System requirements
+system_requirements:
+  controller:
+    min_memory: 8192  # MB
+    min_cpu: 4
+    min_disk: 50  # GB
+  worker:
+    min_memory: 4096  # MB
+    min_cpu: 2
+    min_disk: 20  # GB
+
+# Common packages
+common_packages:
+  - epel-release
+  - python3-pip
+  - git
+  - vim
+  - htop
+  - net-tools 
