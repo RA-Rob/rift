@@ -1,0 +1,111 @@
+#!/bin/bash
+
+# Chasm - Ansible deployment management script
+# Author: Rob Weiss
+# Email: rob.weiss@red-alpha.com
+
+# Set script directory
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$SCRIPT_DIR"
+
+# Default values
+DEPLOYMENT_TYPE="baremetal"
+INVENTORY_FILE="inventory/inventory.ini"
+VERBOSE=""
+SSH_KEY=""
+
+# Print usage information
+usage() {
+    echo "Chasm - Ansible deployment management script"
+    echo
+    echo "Usage: $0 [options] <command> [command-options]"
+    echo
+    echo "Commands:"
+    echo "  generate     Generate inventory.ini file interactively"
+    echo "  verify       Verify inventory structure and deployment type"
+    echo "  preflight    Run preflight checks and setup installation user"
+    echo "  deploy       Deploy Chasm to the target environment"
+    echo "  help         Show this help message"
+    echo
+    echo "Options:"
+    echo "  -t, --type    Deployment type (baremetal|cloud) [default: baremetal]"
+    echo "  -i, --inventory  Inventory file [default: inventory/inventory.ini]"
+    echo "  -v, --verbose Enable verbose output"
+    echo "  -k, --key     SSH public key file for installation user"
+    echo "  -h, --help    Show this help message"
+    echo
+    echo "Examples:"
+    echo "  $0 generate"
+    echo "  $0 verify"
+    echo "  $0 preflight -k ~/.ssh/id_rsa.pub"
+    echo "  $0 deploy -t cloud"
+}
+
+# Parse command line arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -t|--type)
+            DEPLOYMENT_TYPE="$2"
+            shift 2
+            ;;
+        -i|--inventory)
+            INVENTORY_FILE="$2"
+            shift 2
+            ;;
+        -v|--verbose)
+            VERBOSE="-v"
+            shift
+            ;;
+        -k|--key)
+            SSH_KEY="$2"
+            shift 2
+            ;;
+        -h|--help)
+            usage
+            exit 0
+            ;;
+        *)
+            COMMAND="$1"
+            shift
+            break
+            ;;
+    esac
+done
+
+# Check if command is provided
+if [ -z "$COMMAND" ]; then
+    echo "Error: No command specified"
+    usage
+    exit 1
+fi
+
+# Source command files
+source "$SCRIPT_DIR/commands/common.sh"
+source "$SCRIPT_DIR/commands/generate.sh"
+source "$SCRIPT_DIR/commands/verify.sh"
+source "$SCRIPT_DIR/commands/preflight.sh"
+source "$SCRIPT_DIR/commands/deploy.sh"
+
+# Execute commands
+case "$COMMAND" in
+    generate)
+        generate_inventory "$INVENTORY_FILE"
+        ;;
+    verify)
+        verify_inventory "$INVENTORY_FILE" "$DEPLOYMENT_TYPE" "$VERBOSE"
+        ;;
+    preflight)
+        run_preflight "$INVENTORY_FILE" "$DEPLOYMENT_TYPE" "$VERBOSE" "$SSH_KEY"
+        ;;
+    deploy)
+        run_deploy "$INVENTORY_FILE" "$DEPLOYMENT_TYPE" "$VERBOSE"
+        ;;
+    help)
+        usage
+        ;;
+    *)
+        echo "Error: Unknown command: $COMMAND"
+        usage
+        exit 1
+        ;;
+esac 
