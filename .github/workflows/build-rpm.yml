@@ -221,10 +221,23 @@ jobs:
           $CONTAINER_CMD run --rm -v "$TEST_DIR:/rpms" \
               -w /rpms registry.access.redhat.com/ubi9/ubi:latest \
               bash -c '
-                  dnf -y install epel-release
+                  # Enable CRB repository
+                  dnf -y install dnf-utils
+                  dnf config-manager --set-enabled crb
+                  
+                  # Install EPEL
+                  dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+                  
+                  # Install Python and pip
                   dnf -y install python3 python3-pip
+                  
+                  # Install ansible-core from EPEL
                   dnf -y install ansible-core
+                  
+                  # Install Chasm RPM
                   dnf -y install /rpms/*.rpm
+                  
+                  # Run tests
                   chasm test
               '
           
