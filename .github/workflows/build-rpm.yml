@@ -197,16 +197,7 @@ jobs:
           set -e
 
           # Enable EPEL repository
-          if [ -f /etc/redhat-release ]; then
-            if grep -q "Red Hat Enterprise Linux" /etc/redhat-release; then
-              # RHEL 9
-              subscription-manager repos --enable codeready-builder-for-rhel-9-$(arch)-rpms
-              dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
-            else
-              # Rocky Linux 9
-              dnf install -y epel-release
-            fi
-          fi
+          dnf install -y epel-release
 
           # Install Python 3.9 and pip
           dnf install -y python39 python39-pip python39-devel
@@ -234,11 +225,7 @@ jobs:
           chmod +x test_rpm.sh
 
           # Run tests in container
-          if [ "${{ matrix.distro }}" = "rhel9" ]; then
-            podman run --rm -v "$TEST_DIR:/test:Z" registry.access.redhat.com/ubi9/ubi:latest /test/test_rpm.sh
-          else
-            podman run --rm -v "$TEST_DIR:/test:Z" quay.io/rockylinux/rockylinux:9 /test/test_rpm.sh
-          fi
+          podman run --rm -v "$TEST_DIR:/test:Z" quay.io/rockylinux/rockylinux:9 /test/test_rpm.sh
 
           # Cleanup
           cd -
