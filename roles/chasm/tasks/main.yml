@@ -1,0 +1,38 @@
+---
+# Chasm role tasks
+# This role handles core Chasm functionality and setup
+
+- name: Create Chasm configuration directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - /etc/chasm
+    - /etc/chasm/config
+    - /var/log/chasm
+
+- name: Install Chasm dependencies
+  dnf:
+    name:
+      - python3-pip
+      - python3-setuptools
+      - python3-devel
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Install Python packages
+  pip:
+    name:
+      - ansible-core>=2.9
+      - molecule
+      - molecule-podman
+    state: present
+    executable: pip3
+
+- name: Ensure Chasm service is enabled
+  systemd:
+    name: chasm
+    enabled: yes
+    state: started
+  when: ansible_service_mgr == 'systemd' 
