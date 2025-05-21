@@ -21,7 +21,7 @@ jobs:
       - name: Set up RPM build environment
         run: |
           sudo apt-get update
-          sudo apt-get install -y rpm rpm-build
+          sudo apt-get install -y rpm rpm2cpio cpio alien
 
       - name: Create RPM build directories
         run: |
