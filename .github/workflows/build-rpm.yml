@@ -177,16 +177,16 @@ jobs:
           cd "$TEST_DIR"
           
           # Copy RPMs to test directory if they exist
-          if [ -d "../rhel" ] && ls ../rhel/*.rpm 1> /dev/null 2>&1; then
+          if [ -d "$GITHUB_WORKSPACE/rhel" ] && ls "$GITHUB_WORKSPACE/rhel"/*.rpm 1> /dev/null 2>&1; then
               echo "Copying RHEL RPMs..."
-              cp ../rhel/*.rpm .
+              cp "$GITHUB_WORKSPACE/rhel"/*.rpm .
           else
               echo "No RHEL RPMs found"
           fi
           
-          if [ -d "../rocky" ] && ls ../rocky/*.rpm 1> /dev/null 2>&1; then
+          if [ -d "$GITHUB_WORKSPACE/rocky" ] && ls "$GITHUB_WORKSPACE/rocky"/*.rpm 1> /dev/null 2>&1; then
               echo "Copying Rocky Linux RPMs..."
-              cp ../rocky/*.rpm .
+              cp "$GITHUB_WORKSPACE/rocky"/*.rpm .
           else
               echo "No Rocky Linux RPMs found"
           fi
@@ -227,5 +227,5 @@ jobs:
               '
           
           # Clean up
-          cd ..
+          cd "$GITHUB_WORKSPACE"
           rm -rf "$TEST_DIR" 
