@@ -179,8 +179,17 @@ jobs:
         run: |
           # Create a temporary directory for testing
           TEST_DIR=$(mktemp -d)
-          cp ${{ steps.build-rpm.outputs.rpm }} $TEST_DIR/
-          cd $TEST_DIR
+          
+          # Copy RPM from artifacts directory
+          if [ -d "./rpms" ]; then
+            cp ./rpms/*.rpm "$TEST_DIR/"
+          else
+            echo "Error: RPM files not found in ./rpms directory"
+            ls -la
+            exit 1
+          fi
+          
+          cd "$TEST_DIR"
 
           # Create test script
           cat > test_rpm.sh << 'EOF'
@@ -226,11 +235,11 @@ jobs:
 
           # Run tests in container
           if [ "${{ matrix.distro }}" = "rhel9" ]; then
-            podman run --rm -v $TEST_DIR:/test:Z registry.access.redhat.com/ubi9/ubi:latest /test/test_rpm.sh
+            podman run --rm -v "$TEST_DIR:/test:Z" registry.access.redhat.com/ubi9/ubi:latest /test/test_rpm.sh
           else
-            podman run --rm -v $TEST_DIR:/test:Z quay.io/rockylinux/rockylinux:9 /test/test_rpm.sh
+            podman run --rm -v "$TEST_DIR:/test:Z" quay.io/rockylinux/rockylinux:9 /test/test_rpm.sh
           fi
 
           # Cleanup
           cd -
-          rm -rf $TEST_DIR 
+          rm -rf "$TEST_DIR" 
