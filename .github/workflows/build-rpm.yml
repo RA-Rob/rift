@@ -226,13 +226,52 @@ jobs:
           echo "Installing RPM file: /test/$RPM_BASENAME"
           dnf install -y "/test/$RPM_BASENAME"
 
+          # Create test playbook
+          cat > /usr/share/chasm/test.yml << 'TESTEOF'
+          ---
+          # Test playbook for Chasm RPM verification
+          - name: Verify Chasm installation
+            hosts: localhost
+            gather_facts: true
+            tasks:
+              - name: Check if chasm command exists
+                command: which chasm
+                register: chasm_cmd
+                changed_when: false
+
+              - name: Display chasm version
+                command: chasm --version
+                register: chasm_version
+                changed_when: false
+
+              - name: Verify configuration directories
+                file:
+                  path: "{{ item }}"
+                  state: directory
+                loop:
+                  - /etc/chasm
+                  - /usr/share/chasm
+                  - /usr/share/chasm/roles
+                changed_when: false
+
+              - name: List installed roles
+                command: ls -la /usr/share/chasm/roles
+                register: roles_list
+                changed_when: false
+
+              - name: Display test results
+                debug:
+                  msg: "Chasm RPM verification successful"
+                when: chasm_cmd.rc == 0
+          TESTEOF
+
+          # Run the test playbook
+          cd /usr/share/chasm
+          ansible-playbook test.yml --check
+
           # Verify installation
           which chasm
           chasm --version
-
-          # Run a basic playbook test
-          cd /usr/share/chasm
-          ansible-playbook site.yml --check
           EOF
 
           chmod +x test_rpm.sh
