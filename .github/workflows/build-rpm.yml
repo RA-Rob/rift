@@ -183,6 +183,13 @@ jobs:
           # Copy RPM from artifacts directory
           if [ -d "./rpms" ]; then
             cp ./rpms/*.rpm "$TEST_DIR/"
+            RPM_FILE=$(ls "$TEST_DIR"/*.rpm)
+            if [ -z "$RPM_FILE" ]; then
+              echo "Error: No RPM files found in ./rpms directory"
+              ls -la ./rpms
+              exit 1
+            fi
+            echo "Found RPM file: $RPM_FILE"
           else
             echo "Error: RPM files not found in ./rpms directory"
             ls -la
@@ -192,7 +199,7 @@ jobs:
           cd "$TEST_DIR"
 
           # Create test script
-          cat > test_rpm.sh << 'EOF'
+          cat > test_rpm.sh << EOF
           #!/bin/bash
           set -e
 
@@ -212,7 +219,8 @@ jobs:
           pip3 install ansible-core>=2.9
 
           # Install the RPM
-          dnf install -y *.rpm
+          echo "Installing RPM file: $RPM_FILE"
+          dnf install -y "$RPM_FILE"
 
           # Verify installation
           which chasm
