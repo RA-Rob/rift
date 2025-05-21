@@ -33,8 +33,9 @@ jobs:
           WORKSPACE_DIR=$(pwd)
           echo "Workspace directory: ${WORKSPACE_DIR}"
           
-          VERSION=$(cat VERSION)
-          echo "Creating tarball for version: ${VERSION}"
+          # Read and clean version string
+          VERSION=$(cat VERSION | tr -d '[:space:]')
+          echo "Creating tarball for version: '${VERSION}'"
           
           # Create temporary directory in workspace
           TEMP_DIR=$(mktemp -d)
@@ -77,18 +78,23 @@ jobs:
 
       - name: Update spec file version
         run: |
-          VERSION=$(cat VERSION)
-          echo "Updating spec file with version: ${VERSION}"
+          # Read and clean version string
+          VERSION=$(cat VERSION | tr -d '[:space:]')
+          echo "Updating spec file with version: '${VERSION}'"
+          
           # Update version in spec file
           sed -i "s/^Version:.*/Version:        ${VERSION}/" chasm.spec
+          
           # Copy spec file to SPECS directory
           cp chasm.spec ~/rpmbuild/SPECS/
+          
           # Verify spec file
           echo "Verifying spec file contents:"
           cat ~/rpmbuild/SPECS/chasm.spec
+          
           # Verify source tarball exists
           echo "Verifying source tarball exists:"
-          ls -l ~/rpmbuild/SOURCES/chasm-${VERSION}.tar.gz
+          ls -l "${HOME}/rpmbuild/SOURCES/chasm-${VERSION}.tar.gz"
 
       - name: Build RPM package
         run: |
