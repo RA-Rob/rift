@@ -211,6 +211,7 @@ jobs:
               bash -c '
                   dnf -y install epel-release
                   dnf -y install python3 python3-pip
+                  dnf -y install ansible-core
                   dnf -y install /rpms/*.rpm
                   chasm test
               '
@@ -222,6 +223,7 @@ jobs:
               bash -c '
                   dnf -y install epel-release
                   dnf -y install python3 python3-pip
+                  dnf -y install ansible-core
                   dnf -y install /rpms/*.rpm
                   chasm test
               '
