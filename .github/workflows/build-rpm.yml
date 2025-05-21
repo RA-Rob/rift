@@ -188,20 +188,37 @@ jobs:
             exit 1
           }
           
-          # Test RPM installation
-          echo "Installing RPM..."
-          cd "${TEST_DIR}"
-          sudo yum install -y ./*.rpm
+          # Set up container based on distribution
+          if [ "${{ matrix.distro }}" = "rhel9" ]; then
+            CONTAINER_IMAGE="registry.access.redhat.com/ubi9/ubi:latest"
+          else
+            CONTAINER_IMAGE="rockylinux:9"
+          fi
           
-          # Verify installation
-          echo "Verifying installation..."
-          which chasm
-          chasm --version
+          echo "Using container image: ${CONTAINER_IMAGE}"
           
-          # Test basic functionality
-          echo "Testing basic functionality..."
-          ansible-playbook -i /usr/share/chasm/inventory/hosts /usr/share/chasm/site.yml --check
+          # Run tests in container
+          podman run --rm \
+            -v "${TEST_DIR}:/rpms:Z" \
+            -v "${PWD}:/workspace:Z" \
+            "${CONTAINER_IMAGE}" \
+            bash -c "
+              # Install dependencies
+              dnf update -y
+              dnf install -y ansible python3-pip
+              pip3 install molecule molecule-podman
+              
+              # Install RPM
+              cd /rpms
+              dnf install -y ./*.rpm
+              
+              # Verify installation
+              which chasm
+              chasm --version
+              
+              # Test basic functionality
+              ansible-playbook -i /usr/share/chasm/inventory/hosts /usr/share/chasm/site.yml --check
+            "
           
           # Clean up
-          cd -
           rm -rf "${TEST_DIR}" 
