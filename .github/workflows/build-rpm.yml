@@ -228,15 +228,15 @@ jobs:
                   # Install EPEL
                   dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
                   
-                  # Install Python and pip
-                  dnf -y install python3 python3-pip
+                  # Install Python, pip, and RPM build tools
+                  dnf -y install python3 python3-pip rpm-build rpmdevtools
                   
                   # Install ansible-core via pip
                   pip3 install "ansible-core>=2.9"
                   
                   # Create dummy package that provides ansible-core
-                  mkdir -p /tmp/dummy
-                  cat > /tmp/dummy/dummy.spec << EOF
+                  mkdir -p /tmp/dummy/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+                  cat > /tmp/dummy/SPECS/dummy.spec << EOF
 Name:           dummy-ansible-core
 Version:        2.15.13
 Release:        1%{?dist}
@@ -254,7 +254,7 @@ Dummy package that provides ansible-core to satisfy RPM dependencies.
 * $(date "+%a %b %d %Y") Dummy Package <dummy@example.com> - 2.15.13-1
 - Initial build
 EOF
-                  rpmbuild --define "_topdir /tmp/dummy" -bb /tmp/dummy/dummy.spec
+                  rpmbuild --define "_topdir /tmp/dummy" -bb /tmp/dummy/SPECS/dummy.spec
                   dnf -y install /tmp/dummy/RPMS/noarch/dummy-ansible-core-2.15.13-1*.rpm
                   
                   # Install Chasm RPM
