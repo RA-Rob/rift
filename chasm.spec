@@ -38,19 +38,19 @@ mkdir -p %{buildroot}%{_datadir}/chasm/inventory
 mkdir -p %{buildroot}%{_datadir}/chasm/tools
 
 # Install the main chasm script
-install -m 755 %{_sourcedir}/tools/chasm %{buildroot}%{_bindir}/chasm
+install -m 755 tools/chasm %{buildroot}%{_bindir}/chasm
 
 # Install playbooks
-cp -r %{_sourcedir}/playbooks/* %{buildroot}%{_datadir}/chasm/playbooks/
+cp -r playbooks/* %{buildroot}%{_datadir}/chasm/playbooks/
 
 # Install roles
-cp -r %{_sourcedir}/roles/* %{buildroot}%{_datadir}/chasm/roles/
+cp -r roles/* %{buildroot}%{_datadir}/chasm/roles/
 
 # Install inventory
-cp -r %{_sourcedir}/inventory/* %{buildroot}%{_datadir}/chasm/inventory/
+cp -r inventory/* %{buildroot}%{_datadir}/chasm/inventory/
 
 # Install tools
-cp -r %{_sourcedir}/tools/* %{buildroot}%{_datadir}/chasm/tools/
+cp -r tools/* %{buildroot}%{_datadir}/chasm/tools/
 
 # Create ansible.cfg
 cat > %{buildroot}%{_datadir}/chasm/ansible.cfg << 'EOF'
