@@ -30,16 +30,18 @@ jobs:
       - name: Create source tarball
         run: |
           VERSION=$(cat VERSION)
-          # Create a clean directory for the tarball
-          mkdir -p ../chasm-${VERSION}
-          # Copy all files except .git and the parent directory
-          find . -maxdepth 1 -not -name '.' -not -name '..' -not -name '.git' -exec cp -r {} ../chasm-${VERSION}/ \;
+          # Create temporary directory in workspace
+          TEMP_DIR=$(mktemp -d)
+          # Create versioned directory
+          mkdir -p "${TEMP_DIR}/chasm-${VERSION}"
+          # Copy all files except .git
+          find . -maxdepth 1 -not -name '.' -not -name '..' -not -name '.git' -not -name "${TEMP_DIR##*/}" -exec cp -r {} "${TEMP_DIR}/chasm-${VERSION}/" \;
           # Create the tarball
-          cd ..
+          cd "${TEMP_DIR}"
           tar -czf ~/rpmbuild/SOURCES/chasm-${VERSION}.tar.gz chasm-${VERSION}
           # Clean up
-          rm -rf chasm-${VERSION}
-          cd chasm
+          cd -
+          rm -rf "${TEMP_DIR}"
 
       - name: Update spec file version
         run: |
@@ -120,12 +122,23 @@ jobs:
 
       - name: Run basic RPM tests
         run: |
+          # Create test directory
+          TEST_DIR=$(mktemp -d)
+          cd "${TEST_DIR}"
+          
+          # Copy RPM to test directory
+          cp ../rpms/*.rpm .
+          
           # Test RPM installation
-          sudo yum install -y ./rpms/*.rpm
+          sudo yum install -y ./*.rpm
           
           # Verify installation
           which chasm
           chasm --version
           
           # Test basic functionality
-          ansible-playbook -i /usr/share/chasm/inventory/hosts /usr/share/chasm/site.yml --check 
+          ansible-playbook -i /usr/share/chasm/inventory/hosts /usr/share/chasm/site.yml --check
+          
+          # Clean up
+          cd -
+          rm -rf "${TEST_DIR}" 
