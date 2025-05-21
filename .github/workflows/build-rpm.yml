@@ -30,15 +30,25 @@ jobs:
       - name: Create source tarball
         run: |
           VERSION=$(echo ${{ github.ref_name }} | sed 's/^v//')
-          tar -czf ~/rpmbuild/SOURCES/chasm-${VERSION}.tar.gz .
+          # Create a clean directory for the tarball
+          mkdir -p chasm-${VERSION}
+          # Copy all files except .git
+          cp -r * chasm-${VERSION}/
+          # Create the tarball
+          tar -czf ~/rpmbuild/SOURCES/chasm-${VERSION}.tar.gz chasm-${VERSION}
+          # Clean up
+          rm -rf chasm-${VERSION}
 
       - name: Update spec file version
         run: |
           VERSION=$(echo ${{ github.ref_name }} | sed 's/^v//')
           sed -i "s/^Version:.*/Version:        ${VERSION}/" chasm.spec
+          # Copy spec file to SPECS directory
+          cp chasm.spec ~/rpmbuild/SPECS/
 
       - name: Build RPM package
         run: |
+          cd ~/rpmbuild/SPECS
           rpmbuild --define "_topdir $HOME/rpmbuild" -bb chasm.spec
 
       - name: Generate release notes
