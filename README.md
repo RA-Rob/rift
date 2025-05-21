@@ -1,5 +1,7 @@
 # Chasm
 
+[![Build RPM](https://github.com/RA-Rob/chasm/actions/workflows/build-rpm.yml/badge.svg)](https://github.com/RA-Rob/chasm/actions/workflows/build-rpm.yml)
+
 Ansible-based deployment system for Rocky Linux 9 and RHEL 9 environments.
 
 ## Overview
@@ -46,7 +48,7 @@ Chasm is a deployment automation system that provides a standardized way to depl
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/chasm.git
+   git clone https://github.com/RA-Rob/chasm.git
    cd chasm
    ```
 
