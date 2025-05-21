@@ -204,6 +204,9 @@ jobs:
           #!/bin/bash
           set -e
 
+          # Install basic utilities
+          dnf install -y which findutils
+
           # Enable EPEL repository and CRB
           dnf install -y epel-release
           dnf config-manager --set-enabled crb
