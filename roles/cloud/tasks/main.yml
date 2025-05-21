@@ -1,0 +1,21 @@
+---
+# Cloud role tasks
+# This role handles cloud infrastructure setup and configuration
+
+- name: Ensure cloud packages are installed
+  dnf:
+    name:
+      - python3-openstackclient
+      - python3-boto3
+      - python3-azure-cli
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Create cloud configuration directory
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - /etc/chasm/cloud
+    - /etc/chasm/cloud/credentials 

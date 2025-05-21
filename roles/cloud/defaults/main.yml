@@ -1,0 +1,10 @@
+---
+# Cloud role defaults
+
+# Cloud provider configuration
+cloud_provider: "openstack"  # openstack, aws, azure
+cloud_region: "regionOne"
+
+# Credentials paths
+cloud_credentials_path: "/etc/chasm/cloud/credentials"
+cloud_config_path: "/etc/chasm/cloud/config" 
