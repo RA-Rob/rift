@@ -231,12 +231,31 @@ jobs:
                   # Install Python and pip
                   dnf -y install python3 python3-pip
                   
-                  # Install ansible-core via pip and create system symlinks
+                  # Install ansible-core via pip
                   pip3 install "ansible-core>=2.9"
-                  ln -sf /usr/local/bin/ansible /usr/bin/ansible
-                  ln -sf /usr/local/bin/ansible-playbook /usr/bin/ansible-playbook
-                  ln -sf /usr/local/bin/ansible-config /usr/bin/ansible-config
-                  ln -sf /usr/local/bin/ansible-inventory /usr/bin/ansible-inventory
+                  
+                  # Create dummy package that provides ansible-core
+                  mkdir -p /tmp/dummy
+                  cat > /tmp/dummy/dummy.spec << EOF
+Name:           dummy-ansible-core
+Version:        2.15.13
+Release:        1%{?dist}
+Summary:        Dummy package that provides ansible-core
+Provides:       ansible-core >= 2.9
+License:        MIT
+BuildArch:      noarch
+
+%description
+Dummy package that provides ansible-core to satisfy RPM dependencies.
+
+%files
+
+%changelog
+* $(date "+%a %b %d %Y") Dummy Package <dummy@example.com> - 2.15.13-1
+- Initial build
+EOF
+                  rpmbuild --define "_topdir /tmp/dummy" -bb /tmp/dummy/dummy.spec
+                  dnf -y install /tmp/dummy/RPMS/noarch/dummy-ansible-core-2.15.13-1*.rpm
                   
                   # Install Chasm RPM
                   dnf -y install /rpms/*.rpm
