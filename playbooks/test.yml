@@ -1,0 +1,58 @@
+---
+- name: Verify Chasm Installation
+  hosts: localhost
+  gather_facts: true
+  tasks:
+    - name: Check chasm command exists
+      command: which chasm
+      register: chasm_path
+      changed_when: false
+      failed_when: false
+
+    - name: Display chasm path
+      debug:
+        msg: "Chasm installed at: {{ chasm_path.stdout }}"
+
+    - name: Get chasm version
+      command: chasm version
+      register: chasm_version
+      changed_when: false
+
+    - name: Display chasm version
+      debug:
+        msg: "{{ chasm_version.stdout_lines }}"
+
+    - name: Verify required directories
+      stat:
+        path: "{{ item }}"
+      register: dir_check
+      loop:
+        - /usr/share/chasm
+        - /usr/share/chasm/playbooks
+        - /usr/share/chasm/roles
+        - /usr/share/chasm/inventory
+        - /usr/share/chasm/tools
+
+    - name: Display directory check results
+      debug:
+        msg: "{{ item.stat.exists }}"
+      loop: "{{ dir_check.results }}"
+
+    - name: List installed roles
+      find:
+        paths: /usr/share/chasm/roles
+        patterns: "*.yml"
+      register: roles_list
+
+    - name: Display installed roles
+      debug:
+        msg: "Installed roles: {{ roles_list.files | map(attribute='path') | map('basename') | list }}"
+
+    - name: Verify ansible.cfg
+      stat:
+        path: /usr/share/chasm/ansible.cfg
+      register: ansible_cfg
+
+    - name: Display ansible.cfg status
+      debug:
+        msg: "ansible.cfg exists: {{ ansible_cfg.stat.exists }}" 

@@ -27,6 +27,7 @@ usage() {
     echo "  verify       Verify inventory structure and deployment type"
     echo "  preflight    Run preflight checks and setup installation user"
     echo "  deploy       Deploy Chasm to the target environment"
+    echo "  test         Run installation verification tests"
     echo "  version      Show version information"
     echo "  help         Show this help message"
     echo
@@ -42,6 +43,7 @@ usage() {
     echo "  $0 verify"
     echo "  $0 preflight -k ~/.ssh/id_rsa.pub"
     echo "  $0 deploy -t cloud"
+    echo "  $0 test"
     echo "  $0 version"
 }
 
@@ -54,6 +56,19 @@ show_version() {
         echo "Ansible version: unknown"
     fi
     echo "Python version: $(python3 --version 2>&1)"
+}
+
+# Run installation tests
+run_tests() {
+    local playbook="/usr/share/chasm/playbooks/test.yml"
+    if [ ! -f "$playbook" ]; then
+        echo "Error: Test playbook not found at $playbook"
+        return 1
+    fi
+
+    echo "Running Chasm installation tests..."
+    ansible-playbook "$playbook" $VERBOSE
+    return $?
 }
 
 # Parse command line arguments
@@ -114,6 +129,9 @@ case "$COMMAND" in
         ;;
     deploy)
         run_deploy "$INVENTORY_FILE" "$DEPLOYMENT_TYPE" "$VERBOSE"
+        ;;
+    test)
+        run_tests
         ;;
     version)
         show_version

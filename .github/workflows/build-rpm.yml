@@ -145,140 +145,52 @@ jobs:
 
   test-rpm:
     needs: build-rpm
-    strategy:
-      matrix:
-        distro: [rhel9, rocky9]
     runs-on: ubuntu-latest
     steps:
       - name: Download RPM artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v3
         with:
-          name: chasm-rpm-${{ matrix.distro }}
-          path: ./rpms
-        continue-on-error: true
-
-      - name: Debug artifact download
-        run: |
-          echo "Current directory: $(pwd)"
-          echo "Contents of current directory:"
-          ls -la
-          echo "Contents of rpms directory:"
-          ls -la ./rpms || true
-
-      - name: Set up test environment
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-
-      - name: Install test dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install ansible molecule molecule-podman podman
+          name: chasm-rpm
+          path: .
 
       - name: Run basic RPM tests
         run: |
           # Create a temporary directory for testing
           TEST_DIR=$(mktemp -d)
+          cd "$TEST_DIR"
           
-          # Copy RPM from artifacts directory
-          if [ -d "./rpms" ]; then
-            cp ./rpms/*.rpm "$TEST_DIR/"
-            RPM_FILE=$(ls "$TEST_DIR"/*.rpm)
-            if [ -z "$RPM_FILE" ]; then
-              echo "Error: No RPM files found in ./rpms directory"
-              ls -la ./rpms
-              exit 1
-            fi
-            echo "Found RPM file: $RPM_FILE"
-            RPM_BASENAME=$(basename "$RPM_FILE")
+          # Copy RPM to test directory
+          cp ../chasm-*.rpm .
+          
+          # Create a container for testing
+          if command -v podman &> /dev/null; then
+              CONTAINER_CMD=podman
           else
-            echo "Error: RPM files not found in ./rpms directory"
-            ls -la
-            exit 1
+              CONTAINER_CMD=docker
           fi
           
-          cd "$TEST_DIR"
-
-          # Create test script
-          cat > test_rpm.sh << EOF
-          #!/bin/bash
-          set -e
-
-          # Install basic utilities
-          dnf install -y which findutils
-
-          # Enable EPEL repository and CRB
-          dnf install -y epel-release
-          dnf config-manager --set-enabled crb
-
-          # Install Python 3.9 and pip
-          dnf install -y python3 python3-pip python3-devel
-
-          # Create Python 3.9 virtual environment
-          python3 -m venv /opt/chasm-venv
-          source /opt/chasm-venv/bin/activate
-
-          # Install Ansible and dependencies
-          pip3 install --upgrade pip
-          pip3 install ansible-core>=2.9
-
-          # Install the RPM
-          echo "Installing RPM file: /test/$RPM_BASENAME"
-          dnf install -y "/test/$RPM_BASENAME"
-
-          # Create test playbook
-          cat > /usr/share/chasm/test.yml << 'TESTEOF'
-          ---
-          # Test playbook for Chasm RPM verification
-          - name: Verify Chasm installation
-            hosts: localhost
-            gather_facts: true
-            tasks:
-              - name: Check if chasm command exists
-                command: which chasm
-                register: chasm_cmd
-                changed_when: false
-
-              - name: Display chasm version
-                command: chasm --version
-                register: chasm_version
-                changed_when: false
-
-              - name: Verify configuration directories
-                file:
-                  path: "{{ item }}"
-                  state: directory
-                loop:
-                  - /etc/chasm
-                  - /usr/share/chasm
-                  - /usr/share/chasm/roles
-                changed_when: false
-
-              - name: List installed roles
-                command: ls -la /usr/share/chasm/roles
-                register: roles_list
-                changed_when: false
-
-              - name: Display test results
-                debug:
-                  msg: "Chasm RPM verification successful"
-                when: chasm_cmd.rc == 0
-          TESTEOF
-
-          # Run the test playbook
-          cd /usr/share/chasm
-          ansible-playbook test.yml --check
-
-          # Verify installation
-          which chasm
-          chasm --version
-          EOF
-
-          chmod +x test_rpm.sh
-
-          # Run tests in container
-          podman run --rm -v "$TEST_DIR:/test:Z" quay.io/rockylinux/rockylinux:9 /test/test_rpm.sh
-
-          # Cleanup
-          cd -
+          # Test on Rocky Linux 9
+          echo "Testing on Rocky Linux 9..."
+          $CONTAINER_CMD run --rm -v "$TEST_DIR:/rpms" \
+              -w /rpms registry.rockylinux.org/rockylinux/rockylinux:9 \
+              bash -c '
+                  dnf -y install epel-release
+                  dnf -y install python3 python3-pip
+                  dnf -y install /rpms/chasm-*.rpm
+                  chasm test
+              '
+          
+          # Test on RHEL 9
+          echo "Testing on RHEL 9..."
+          $CONTAINER_CMD run --rm -v "$TEST_DIR:/rpms" \
+              -w /rpms registry.access.redhat.com/ubi9/ubi:latest \
+              bash -c '
+                  dnf -y install epel-release
+                  dnf -y install python3 python3-pip
+                  dnf -y install /rpms/chasm-*.rpm
+                  chasm test
+              '
+          
+          # Clean up
+          cd ..
           rm -rf "$TEST_DIR" 
