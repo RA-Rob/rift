@@ -1,0 +1,119 @@
+name: Build RPM Package
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build-rpm:
+    strategy:
+      matrix:
+        distro: [rhel9, rocky9]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Fetch all history for release notes
+
+      - name: Set up RPM build environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rpm rpm-build
+
+      - name: Create RPM build directories
+        run: |
+          mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+
+      - name: Create source tarball
+        run: |
+          VERSION=$(echo ${{ github.ref_name }} | sed 's/^v//')
+          tar -czf ~/rpmbuild/SOURCES/chasm-${VERSION}.tar.gz .
+
+      - name: Update spec file version
+        run: |
+          VERSION=$(echo ${{ github.ref_name }} | sed 's/^v//')
+          sed -i "s/^Version:.*/Version:        ${VERSION}/" chasm.spec
+
+      - name: Build RPM package
+        run: |
+          rpmbuild --define "_topdir $HOME/rpmbuild" -bb chasm.spec
+
+      - name: Generate release notes
+        id: release_notes
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          # Get the previous tag
+          PREV_TAG=$(git describe --tags --abbrev=0 ${{ github.ref }}^ 2>/dev/null || echo "")
+          
+          if [ -z "$PREV_TAG" ]; then
+            # If no previous tag, get all commits
+            RELEASE_NOTES=$(git log --pretty=format:"* %s (%h)" ${{ github.ref }})
+          else
+            # Get commits between tags
+            RELEASE_NOTES=$(git log --pretty=format:"* %s (%h)" $PREV_TAG..${{ github.ref }})
+          fi
+          
+          # Escape newlines for GitHub Actions
+          RELEASE_NOTES="${RELEASE_NOTES//'%'/'%25'}"
+          RELEASE_NOTES="${RELEASE_NOTES//$'\n'/'%0A'}"
+          RELEASE_NOTES="${RELEASE_NOTES//$'\r'/'%0D'}"
+          
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "## What's Changed" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Upload RPM artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: chasm-rpm-${{ matrix.distro }}
+          path: ~/rpmbuild/RPMS/noarch/*.rpm
+
+      - name: Create GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ~/rpmbuild/RPMS/noarch/*.rpm
+          body: ${{ steps.release_notes.outputs.notes }}
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  test-rpm:
+    needs: build-rpm
+    strategy:
+      matrix:
+        distro: [rhel9, rocky9]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download RPM artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: chasm-rpm-${{ matrix.distro }}
+          path: ./rpms
+
+      - name: Set up test environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install ansible molecule molecule-podman podman
+
+      - name: Run basic RPM tests
+        run: |
+          # Test RPM installation
+          sudo yum install -y ./rpms/*.rpm
+          
+          # Verify installation
+          which chasm
+          chasm --version
+          
+          # Test basic functionality
+          ansible-playbook -i /usr/share/chasm/inventory/hosts /usr/share/chasm/site.yml --check 
