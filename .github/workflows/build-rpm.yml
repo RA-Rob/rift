@@ -175,7 +175,7 @@ jobs:
           # Test on Rocky Linux 9
           echo "Testing on Rocky Linux 9..."
           $CONTAINER_CMD run --rm -v "$TEST_DIR:/rpms" \
-              -w /rpms registry.rockylinux.org/rockylinux/rockylinux:9 \
+              -w /rpms quay.io/rockylinux/rockylinux:9 \
               bash -c '
                   dnf -y install epel-release
                   dnf -y install python3 python3-pip
