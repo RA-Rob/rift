@@ -30,15 +30,34 @@ jobs:
       - name: Create source tarball
         run: |
           VERSION=$(cat VERSION)
+          echo "Creating tarball for version: ${VERSION}"
+          
           # Create temporary directory in workspace
           TEMP_DIR=$(mktemp -d)
+          echo "Created temporary directory: ${TEMP_DIR}"
+          
           # Create versioned directory
-          mkdir -p "${TEMP_DIR}/chasm-${VERSION}"
-          # Copy all files except .git
-          find . -maxdepth 1 -not -name '.' -not -name '..' -not -name '.git' -not -name "${TEMP_DIR##*/}" -exec cp -r {} "${TEMP_DIR}/chasm-${VERSION}/" \;
+          VERSION_DIR="${TEMP_DIR}/chasm-${VERSION}"
+          mkdir -p "${VERSION_DIR}"
+          echo "Created version directory: ${VERSION_DIR}"
+          
+          # Copy all files except .git and temp directory
+          echo "Copying files to version directory..."
+          find . -maxdepth 1 -not -name '.' -not -name '..' -not -name '.git' -not -name "${TEMP_DIR##*/}" -exec cp -rv {} "${VERSION_DIR}/" \;
+          
+          # Verify files were copied
+          echo "Verifying files in version directory..."
+          ls -la "${VERSION_DIR}"
+          
           # Create the tarball
+          echo "Creating tarball..."
           cd "${TEMP_DIR}"
-          tar -czf ~/rpmbuild/SOURCES/chasm-${VERSION}.tar.gz chasm-${VERSION}
+          tar -czvf ~/rpmbuild/SOURCES/chasm-${VERSION}.tar.gz "chasm-${VERSION}"
+          
+          # Verify tarball was created
+          echo "Verifying tarball..."
+          ls -l ~/rpmbuild/SOURCES/chasm-${VERSION}.tar.gz
+          
           # Clean up
           cd -
           rm -rf "${TEMP_DIR}"
