@@ -4,7 +4,7 @@ Release:        1%{?dist}
 Summary:        Chasm - Ansible-based Infrastructure Management
 
 License:        MIT
-URL:            https://github.com/yourusername/chasm
+URL:            https://github.com/RA-Rob/chasm
 BuildArch:      noarch
 
 # Common requirements for both RHEL and Rocky
@@ -22,7 +22,7 @@ Requires:       lvm2
 Chasm is an Ansible-based infrastructure management system that provides automated deployment and configuration capabilities.
 
 %prep
-%autosetup
+%setup -q -n chasm-%{version}
 
 %build
 # No build step needed for Ansible playbooks

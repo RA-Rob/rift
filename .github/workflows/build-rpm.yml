@@ -29,7 +29,7 @@ jobs:
 
       - name: Create source tarball
         run: |
-          VERSION=$(echo ${{ github.ref_name }} | sed 's/^v//')
+          VERSION=$(cat VERSION)
           # Create a clean directory for the tarball
           mkdir -p ../chasm-${VERSION}
           # Copy all files except .git and the parent directory
@@ -43,7 +43,7 @@ jobs:
 
       - name: Update spec file version
         run: |
-          VERSION=$(echo ${{ github.ref_name }} | sed 's/^v//')
+          VERSION=$(cat VERSION)
           sed -i "s/^Version:.*/Version:        ${VERSION}/" chasm.spec
           # Copy spec file to SPECS directory
           cp chasm.spec ~/rpmbuild/SPECS/
