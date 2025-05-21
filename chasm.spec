@@ -5,6 +5,7 @@ Summary:        Chasm - Ansible-based Infrastructure Management
 
 License:        MIT
 URL:            https://github.com/RA-Rob/chasm
+Source0:        %{name}-%{version}.tar.gz
 BuildArch:      noarch
 
 # Common requirements for both RHEL and Rocky
