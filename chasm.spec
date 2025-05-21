@@ -31,9 +31,17 @@ Chasm is an Ansible-based infrastructure management system that provides automat
 %install
 # Install playbooks and roles
 mkdir -p %{buildroot}%{_datadir}/chasm
-cp -r playbooks roles inventory group_vars host_vars %{buildroot}%{_datadir}/chasm/
-cp site.yml %{buildroot}%{_datadir}/chasm/
-cp ansible.cfg %{buildroot}%{_datadir}/chasm/
+
+# Copy directories if they exist
+[ -d playbooks ] && cp -r playbooks %{buildroot}%{_datadir}/chasm/
+[ -d roles ] && cp -r roles %{buildroot}%{_datadir}/chasm/
+[ -d inventory ] && cp -r inventory %{buildroot}%{_datadir}/chasm/
+[ -d group_vars ] && cp -r group_vars %{buildroot}%{_datadir}/chasm/
+[ -d host_vars ] && cp -r host_vars %{buildroot}%{_datadir}/chasm/
+
+# Copy individual files if they exist
+[ -f site.yml ] && cp site.yml %{buildroot}%{_datadir}/chasm/
+[ -f ansible.cfg ] && cp ansible.cfg %{buildroot}%{_datadir}/chasm/
 
 # Create symlink for easy access
 mkdir -p %{buildroot}%{_bindir}
