@@ -190,6 +190,7 @@ jobs:
               exit 1
             fi
             echo "Found RPM file: $RPM_FILE"
+            RPM_BASENAME=$(basename "$RPM_FILE")
           else
             echo "Error: RPM files not found in ./rpms directory"
             ls -la
@@ -219,8 +220,8 @@ jobs:
           pip3 install ansible-core>=2.9
 
           # Install the RPM
-          echo "Installing RPM file: $RPM_FILE"
-          dnf install -y "$RPM_FILE"
+          echo "Installing RPM file: /test/$RPM_BASENAME"
+          dnf install -y "/test/$RPM_BASENAME"
 
           # Verify installation
           which chasm
