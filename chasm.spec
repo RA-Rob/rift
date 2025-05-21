@@ -1,5 +1,5 @@
 Name:           chasm
-Version:        1.0.0
+Version:        %(cat VERSION)
 Release:        1%{?dist}
 Summary:        Chasm - Ansible-based Infrastructure Management
 
@@ -23,35 +23,60 @@ Requires:       lvm2
 Chasm is an Ansible-based infrastructure management system that provides automated deployment and configuration capabilities.
 
 %prep
-%setup -q -n chasm-%{version}
+%setup -q -n %{name}-%{version}
 
 %build
 # No build step needed for Ansible playbooks
 
 %install
-# Install playbooks and roles
-mkdir -p %{buildroot}%{_datadir}/chasm
+# Create necessary directories
 mkdir -p %{buildroot}%{_bindir}
+mkdir -p %{buildroot}%{_datadir}/chasm
+mkdir -p %{buildroot}%{_datadir}/chasm/playbooks
+mkdir -p %{buildroot}%{_datadir}/chasm/roles
+mkdir -p %{buildroot}%{_datadir}/chasm/inventory
+mkdir -p %{buildroot}%{_datadir}/chasm/tools
 
-# Copy directories if they exist
-[ -d playbooks ] && cp -r playbooks %{buildroot}%{_datadir}/chasm/
-[ -d roles ] && cp -r roles %{buildroot}%{_datadir}/chasm/
-[ -d inventory ] && cp -r inventory %{buildroot}%{_datadir}/chasm/
-[ -d group_vars ] && cp -r group_vars %{buildroot}%{_datadir}/chasm/
-[ -d host_vars ] && cp -r host_vars %{buildroot}%{_datadir}/chasm/
+# Install the main chasm script
+install -m 755 %{_sourcedir}/tools/chasm %{buildroot}%{_bindir}/chasm
 
-# Copy individual files if they exist
-[ -f site.yml ] && cp site.yml %{buildroot}%{_datadir}/chasm/
-[ -f ansible.cfg ] && cp ansible.cfg %{buildroot}%{_datadir}/chasm/
+# Install playbooks
+cp -r %{_sourcedir}/playbooks/* %{buildroot}%{_datadir}/chasm/playbooks/
 
-# Create wrapper script
-cat > %{buildroot}%{_bindir}/chasm << 'EOF'
-#!/bin/bash
-ansible-playbook /usr/share/chasm/site.yml "$@"
+# Install roles
+cp -r %{_sourcedir}/roles/* %{buildroot}%{_datadir}/chasm/roles/
+
+# Install inventory
+cp -r %{_sourcedir}/inventory/* %{buildroot}%{_datadir}/chasm/inventory/
+
+# Install tools
+cp -r %{_sourcedir}/tools/* %{buildroot}%{_datadir}/chasm/tools/
+
+# Create ansible.cfg
+cat > %{buildroot}%{_datadir}/chasm/ansible.cfg << 'EOF'
+[defaults]
+inventory = %{_datadir}/chasm/inventory
+roles_path = %{_datadir}/chasm/roles
+host_key_checking = False
+retry_files_enabled = False
+stdout_callback = yaml
+bin_ansible_callbacks = True
 EOF
 
-# Make wrapper script executable
-chmod +x %{buildroot}%{_bindir}/chasm
+# Create host_vars directory
+mkdir -p %{buildroot}%{_datadir}/chasm/inventory/host_vars
+
+# Create group_vars directory
+mkdir -p %{buildroot}%{_datadir}/chasm/inventory/group_vars
+
+# Create playbooks directory
+mkdir -p %{buildroot}%{_datadir}/chasm/playbooks
+
+# Create roles directory
+mkdir -p %{buildroot}%{_datadir}/chasm/roles
+
+# Create tools directory
+mkdir -p %{buildroot}%{_datadir}/chasm/tools
 
 %files
 %{_datadir}/chasm/
