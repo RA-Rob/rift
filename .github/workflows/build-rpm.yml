@@ -231,8 +231,8 @@ jobs:
                   # Install Python and pip
                   dnf -y install python3 python3-pip
                   
-                  # Install ansible-core from EPEL
-                  dnf -y install ansible-core
+                  # Install ansible-core via pip
+                  pip3 install "ansible-core>=2.9"
                   
                   # Install Chasm RPM
                   dnf -y install /rpms/*.rpm
