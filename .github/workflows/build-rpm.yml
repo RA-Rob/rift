@@ -203,9 +203,21 @@ jobs:
             -v "${PWD}:/workspace:Z" \
             "${CONTAINER_IMAGE}" \
             bash -c "
-              # Install dependencies
+              # Enable EPEL repository
+              if [ \"${{ matrix.distro }}\" = \"rhel9\" ]; then
+                dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+              else
+                dnf install -y epel-release
+              fi
+              
+              # Update system and install dependencies
               dnf update -y
-              dnf install -y ansible python3-pip
+              dnf install -y python3 python3-pip
+              
+              # Install Ansible from EPEL
+              dnf install -y ansible
+              
+              # Install additional Python packages
               pip3 install molecule molecule-podman
               
               # Install RPM
