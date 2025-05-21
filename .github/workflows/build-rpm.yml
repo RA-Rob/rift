@@ -165,9 +165,26 @@ jobs:
           TEST_DIR=$(mktemp -d)
           cd "$TEST_DIR"
           
-          # Copy RPMs to test directory
-          cp ../rhel/*.rpm .
-          cp ../rocky/*.rpm .
+          # Copy RPMs to test directory if they exist
+          if [ -d "../rhel" ] && ls ../rhel/*.rpm 1> /dev/null 2>&1; then
+              echo "Copying RHEL RPMs..."
+              cp ../rhel/*.rpm .
+          else
+              echo "No RHEL RPMs found"
+          fi
+          
+          if [ -d "../rocky" ] && ls ../rocky/*.rpm 1> /dev/null 2>&1; then
+              echo "Copying Rocky Linux RPMs..."
+              cp ../rocky/*.rpm .
+          else
+              echo "No Rocky Linux RPMs found"
+          fi
+          
+          # Verify RPMs are present
+          if ! ls *.rpm 1> /dev/null 2>&1; then
+              echo "Error: No RPM files found in test directory"
+              exit 1
+          fi
           
           # Create a container for testing
           if command -v podman &> /dev/null; then
