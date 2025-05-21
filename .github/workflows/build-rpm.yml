@@ -155,6 +155,15 @@ jobs:
         with:
           name: chasm-rpm-${{ matrix.distro }}
           path: ./rpms
+        continue-on-error: true
+
+      - name: Debug artifact download
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "Contents of current directory:"
+          ls -la
+          echo "Contents of rpms directory:"
+          ls -la ./rpms || true
 
       - name: Set up test environment
         uses: actions/setup-python@v4
@@ -170,19 +179,27 @@ jobs:
         run: |
           # Create test directory
           TEST_DIR=$(mktemp -d)
-          cd "${TEST_DIR}"
+          echo "Created test directory: ${TEST_DIR}"
           
           # Copy RPM to test directory
-          cp ../rpms/*.rpm .
+          echo "Copying RPM files..."
+          cp -v ./rpms/*.rpm "${TEST_DIR}/" || {
+            echo "Failed to copy RPM files"
+            exit 1
+          }
           
           # Test RPM installation
+          echo "Installing RPM..."
+          cd "${TEST_DIR}"
           sudo yum install -y ./*.rpm
           
           # Verify installation
+          echo "Verifying installation..."
           which chasm
           chasm --version
           
           # Test basic functionality
+          echo "Testing basic functionality..."
           ansible-playbook -i /usr/share/chasm/inventory/hosts /usr/share/chasm/site.yml --check
           
           # Clean up
