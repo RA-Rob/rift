@@ -78,9 +78,17 @@ jobs:
       - name: Update spec file version
         run: |
           VERSION=$(cat VERSION)
+          echo "Updating spec file with version: ${VERSION}"
+          # Update version in spec file
           sed -i "s/^Version:.*/Version:        ${VERSION}/" chasm.spec
           # Copy spec file to SPECS directory
           cp chasm.spec ~/rpmbuild/SPECS/
+          # Verify spec file
+          echo "Verifying spec file contents:"
+          cat ~/rpmbuild/SPECS/chasm.spec
+          # Verify source tarball exists
+          echo "Verifying source tarball exists:"
+          ls -l ~/rpmbuild/SOURCES/chasm-${VERSION}.tar.gz
 
       - name: Build RPM package
         run: |
