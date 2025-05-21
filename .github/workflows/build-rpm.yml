@@ -152,12 +152,23 @@ jobs:
         with:
           name: chasm-rpm-rhel9
           path: ./rhel
+          pattern: '*.rpm'
+          merge-multiple: true
 
       - name: Download Rocky Linux RPM artifact
         uses: actions/download-artifact@v4
         with:
           name: chasm-rpm-rocky9
           path: ./rocky
+          pattern: '*.rpm'
+          merge-multiple: true
+
+      - name: List downloaded artifacts
+        run: |
+          echo "Contents of rhel directory:"
+          ls -la ./rhel || true
+          echo "Contents of rocky directory:"
+          ls -la ./rocky || true
 
       - name: Run basic RPM tests
         run: |
