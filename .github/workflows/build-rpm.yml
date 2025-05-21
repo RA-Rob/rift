@@ -165,6 +165,10 @@ jobs:
           TEST_DIR=$(mktemp -d)
           cd "$TEST_DIR"
           
+          # Copy RPMs to test directory
+          cp ../rhel/*.rpm .
+          cp ../rocky/*.rpm .
+          
           # Create a container for testing
           if command -v podman &> /dev/null; then
               CONTAINER_CMD=podman
@@ -179,7 +183,7 @@ jobs:
               bash -c '
                   dnf -y install epel-release
                   dnf -y install python3 python3-pip
-                  dnf -y install /rpms/chasm-*.rpm
+                  dnf -y install /rpms/*.rpm
                   chasm test
               '
           
@@ -190,7 +194,7 @@ jobs:
               bash -c '
                   dnf -y install epel-release
                   dnf -y install python3 python3-pip
-                  dnf -y install /rpms/chasm-*.rpm
+                  dnf -y install /rpms/*.rpm
                   chasm test
               '
           
