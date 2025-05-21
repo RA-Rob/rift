@@ -43,9 +43,14 @@ mkdir -p %{buildroot}%{_datadir}/chasm
 [ -f site.yml ] && cp site.yml %{buildroot}%{_datadir}/chasm/
 [ -f ansible.cfg ] && cp ansible.cfg %{buildroot}%{_datadir}/chasm/
 
-# Create symlink for easy access
-mkdir -p %{buildroot}%{_bindir}
-ln -s %{_datadir}/chasm/site.yml %{buildroot}%{_bindir}/chasm
+# Create wrapper script
+cat > %{buildroot}%{_bindir}/chasm << 'EOF'
+#!/bin/bash
+ansible-playbook /usr/share/chasm/site.yml "$@"
+EOF
+
+# Make wrapper script executable
+chmod +x %{buildroot}%{_bindir}/chasm
 
 %files
 %{_datadir}/chasm/
