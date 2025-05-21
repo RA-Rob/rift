@@ -231,8 +231,12 @@ jobs:
                   # Install Python and pip
                   dnf -y install python3 python3-pip
                   
-                  # Install ansible-core via pip
+                  # Install ansible-core via pip and create system symlinks
                   pip3 install "ansible-core>=2.9"
+                  ln -sf /usr/local/bin/ansible /usr/bin/ansible
+                  ln -sf /usr/local/bin/ansible-playbook /usr/bin/ansible-playbook
+                  ln -sf /usr/local/bin/ansible-config /usr/bin/ansible-config
+                  ln -sf /usr/local/bin/ansible-inventory /usr/bin/ansible-inventory
                   
                   # Install Chasm RPM
                   dnf -y install /rpms/*.rpm
