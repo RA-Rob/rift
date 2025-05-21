@@ -9,7 +9,7 @@ Source0:        %{name}-%{version}.tar.gz
 BuildArch:      noarch
 
 # Common requirements for both RHEL and Rocky
-Requires:       ansible >= 2.9
+Requires:       ansible-core >= 2.9
 Requires:       python3 >= 3.9
 Requires:       python3-pip
 Requires:       python3-setuptools

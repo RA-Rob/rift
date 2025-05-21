@@ -177,60 +177,60 @@ jobs:
 
       - name: Run basic RPM tests
         run: |
-          # Create test directory
+          # Create a temporary directory for testing
           TEST_DIR=$(mktemp -d)
-          echo "Created test directory: ${TEST_DIR}"
-          
-          # Copy RPM to test directory
-          echo "Copying RPM files..."
-          cp -v ./rpms/*.rpm "${TEST_DIR}/" || {
-            echo "Failed to copy RPM files"
-            exit 1
-          }
-          
-          # Set up container based on distribution
-          if [ "${{ matrix.distro }}" = "rhel9" ]; then
-            CONTAINER_IMAGE="registry.access.redhat.com/ubi9/ubi:latest"
-          else
-            CONTAINER_IMAGE="rockylinux:9"
+          cp ${{ steps.build-rpm.outputs.rpm }} $TEST_DIR/
+          cd $TEST_DIR
+
+          # Create test script
+          cat > test_rpm.sh << 'EOF'
+          #!/bin/bash
+          set -e
+
+          # Enable EPEL repository
+          if [ -f /etc/redhat-release ]; then
+            if grep -q "Red Hat Enterprise Linux" /etc/redhat-release; then
+              # RHEL 9
+              subscription-manager repos --enable codeready-builder-for-rhel-9-$(arch)-rpms
+              dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+            else
+              # Rocky Linux 9
+              dnf install -y epel-release
+            fi
           fi
-          
-          echo "Using container image: ${CONTAINER_IMAGE}"
-          
+
+          # Install Python 3.9 and pip
+          dnf install -y python39 python39-pip python39-devel
+
+          # Create Python 3.9 virtual environment
+          python3.9 -m venv /opt/chasm-venv
+          source /opt/chasm-venv/bin/activate
+
+          # Install Ansible and dependencies
+          pip3 install --upgrade pip
+          pip3 install ansible-core>=2.9
+
+          # Install the RPM
+          dnf install -y *.rpm
+
+          # Verify installation
+          which chasm
+          chasm --version
+
+          # Run a basic playbook test
+          cd /usr/share/chasm
+          ansible-playbook site.yml --check
+          EOF
+
+          chmod +x test_rpm.sh
+
           # Run tests in container
-          podman run --rm \
-            -v "${TEST_DIR}:/rpms:Z" \
-            -v "${PWD}:/workspace:Z" \
-            "${CONTAINER_IMAGE}" \
-            bash -c "
-              # Enable EPEL repository
-              if [ \"${{ matrix.distro }}\" = \"rhel9\" ]; then
-                dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
-              else
-                dnf install -y epel-release
-              fi
-              
-              # Update system and install dependencies
-              dnf update -y
-              dnf install -y python3 python3-pip
-              
-              # Install Ansible from EPEL
-              dnf install -y ansible
-              
-              # Install additional Python packages
-              pip3 install molecule molecule-podman
-              
-              # Install RPM
-              cd /rpms
-              dnf install -y ./*.rpm
-              
-              # Verify installation
-              which chasm
-              chasm --version
-              
-              # Test basic functionality
-              ansible-playbook -i /usr/share/chasm/inventory/hosts /usr/share/chasm/site.yml --check
-            "
-          
-          # Clean up
-          rm -rf "${TEST_DIR}" 
+          if [ "${{ matrix.distro }}" = "rhel9" ]; then
+            podman run --rm -v $TEST_DIR:/test:Z registry.access.redhat.com/ubi9/ubi:latest /test/test_rpm.sh
+          else
+            podman run --rm -v $TEST_DIR:/test:Z quay.io/rockylinux/rockylinux:9 /test/test_rpm.sh
+          fi
+
+          # Cleanup
+          cd -
+          rm -rf $TEST_DIR 
