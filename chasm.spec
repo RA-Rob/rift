@@ -1,5 +1,5 @@
 Name:           chasm
-Version:        %(cat VERSION)
+Version:        0.0.1a
 Release:        1%{?dist}
 Summary:        Chasm - Ansible-based Infrastructure Management
 

@@ -18,5 +18,5 @@
   roles:
     - chasm
   vars:
-    chasm_version: "latest"  # Can be overridden in group_vars or host_vars
+    chasm_version: "{{ lookup('file', 'VERSION') | trim }}"
     deployment_type: "{{ deployment_type | default('standard') }}" 

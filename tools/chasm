@@ -13,7 +13,7 @@ DEPLOYMENT_TYPE="baremetal"
 INVENTORY_FILE="inventory/inventory.ini"
 VERBOSE=""
 SSH_KEY=""
-VERSION="1.0.0"
+VERSION=$(cat "$SCRIPT_DIR/../VERSION" | tr -d '[:space:]')
 RELEASE="1"
 
 # Print usage information
