@@ -226,7 +226,7 @@ jobs:
                       dnf -y install python3 python3-pip
                       dnf -y install ansible-core
                       dnf -y install /rpms/*.rpm
-                      chasm --version || exit 1
+                      chasm version || exit 1
                   '
           else
               echo "Testing on RHEL 9..."
@@ -250,7 +250,7 @@ jobs:
                       rpm -ivh --nodeps /rpms/*.rpm
                       
                       # Test chasm command
-                      chasm --version || exit 1
+                      chasm version || exit 1
                   '
           fi
           
