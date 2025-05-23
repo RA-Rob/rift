@@ -1,6 +1,6 @@
 Name:           chasm
-Version:        0.0.1a
-Release:        1%{?dist}
+Version:        0.0.1
+Release:        0.rc1%{?dist}
 Summary:        Chasm - Ansible-based Infrastructure Management
 
 License:        MIT

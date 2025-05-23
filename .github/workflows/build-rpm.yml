@@ -88,8 +88,17 @@ jobs:
           VERSION=$(cat VERSION | tr -d '[:space:]')
           echo "Updating spec file with version: '${VERSION}'"
           
-          # Update version in spec file
+          # Determine if this is a release candidate
+          if [[ "${{ github.ref }}" =~ -rc[0-9]+$ ]]; then
+            RC_NUM=$(echo "${{ github.ref }}" | grep -o 'rc[0-9]\+' | sed 's/rc//')
+            RELEASE="0.rc${RC_NUM}%{?dist}"
+          else
+            RELEASE="1%{?dist}"
+          fi
+          
+          # Update version and release in spec file
           sed -i "s/^Version:.*/Version:        ${VERSION}/" chasm.spec
+          sed -i "s/^Release:.*/Release:        ${RELEASE}/" chasm.spec
           
           # Copy spec file to SPECS directory
           cp chasm.spec ~/rpmbuild/SPECS/
