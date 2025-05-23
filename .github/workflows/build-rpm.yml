@@ -130,23 +130,19 @@ jobs:
           # Get the previous tag
           PREV_TAG=$(git describe --tags --abbrev=0 ${{ github.ref }}^ 2>/dev/null || echo "")
           
-          if [ -z "$PREV_TAG" ]; then
-            # If no previous tag, get all commits
-            RELEASE_NOTES=$(git log --pretty=format:"* %s (%h)" ${{ github.ref }})
-          else
-            # Get commits between tags
-            RELEASE_NOTES=$(git log --pretty=format:"* %s (%h)" $PREV_TAG..${{ github.ref }})
-          fi
-          
-          # Escape newlines for GitHub Actions
-          RELEASE_NOTES="${RELEASE_NOTES//'%'/'%25'}"
-          RELEASE_NOTES="${RELEASE_NOTES//$'\n'/'%0A'}"
-          RELEASE_NOTES="${RELEASE_NOTES//$'\r'/'%0D'}"
-          
           echo "notes<<EOF" >> $GITHUB_OUTPUT
           echo "## What's Changed" >> $GITHUB_OUTPUT
           echo "" >> $GITHUB_OUTPUT
-          echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
+          
+          if [ -z "$PREV_TAG" ]; then
+            # If no previous tag, get all commits
+            git log --pretty=format:"* %s (%h)" ${{ github.ref }} >> $GITHUB_OUTPUT
+          else
+            # Get commits between tags
+            git log --pretty=format:"* %s (%h)" $PREV_TAG..${{ github.ref }} >> $GITHUB_OUTPUT
+          fi
+          
+          echo "" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
       - name: Upload RPM artifact
