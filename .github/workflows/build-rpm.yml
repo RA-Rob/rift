@@ -7,6 +7,11 @@ on:
       - 'v*-rc*'  # Release candidates
   workflow_dispatch:
 
+# Add permissions block
+permissions:
+  contents: write  # Required for creating releases
+  packages: write  # Required for uploading artifacts
+
 jobs:
   build-rpm:
     strategy:
