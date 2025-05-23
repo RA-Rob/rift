@@ -3,7 +3,11 @@
 # Preflight command for Chasm
 
 # Source common functions
-source "$(dirname "$0")/common.sh"
+if [ -f "/usr/libexec/chasm/commands/common.sh" ]; then
+    source "/usr/libexec/chasm/commands/common.sh"
+else
+    source "$(dirname "$0")/common.sh"
+fi
 
 run_preflight() {
     local inventory_file="$1"
