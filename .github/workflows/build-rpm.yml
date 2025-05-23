@@ -122,6 +122,16 @@ jobs:
         run: |
           cd ~/rpmbuild/SPECS
           rpmbuild --define "_topdir $HOME/rpmbuild" -bb chasm.spec
+          
+          # Copy RPMs to a directory with clear names
+          mkdir -p ~/release-rpms
+          cp ~/rpmbuild/RPMS/noarch/*.rpm ~/release-rpms/chasm-${{ matrix.distro }}.rpm
+
+      - name: Upload RPM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: chasm-rpm-${{ matrix.distro }}
+          path: ~/release-rpms/*.rpm
 
       - name: Generate release notes
         id: release_notes
@@ -145,17 +155,13 @@ jobs:
           echo "" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Upload RPM artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: chasm-rpm-${{ matrix.distro }}
-          path: ~/rpmbuild/RPMS/noarch/*.rpm
-
       - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/')
+        if: startsWith(github.ref, 'refs/tags/') && matrix.distro == 'rhel9'
         uses: softprops/action-gh-release@v2
         with:
-          files: ~/rpmbuild/RPMS/noarch/*.rpm
+          files: |
+            ~/release-rpms/*.rpm
+            ~/rpmbuild/RPMS/noarch/*.rpm
           body: ${{ steps.release_notes.outputs.notes }}
           generate_release_notes: false
           prerelease: ${{ steps.release_type.outputs.is_prerelease }}
