@@ -4,16 +4,24 @@
 # Author: Rob Weiss
 # Email: rob.weiss@red-alpha.com
 
-# Set script directory
+# Set script directory and data directory
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-cd "$SCRIPT_DIR"
+if [ -f "/usr/share/chasm/VERSION" ]; then
+    # Running from installed location
+    DATA_DIR="/usr/share/chasm"
+    CMD_DIR="/usr/libexec/chasm/commands"
+else
+    # Running from development location
+    DATA_DIR="$SCRIPT_DIR/.."
+    CMD_DIR="$SCRIPT_DIR/commands"
+fi
 
 # Default values
 DEPLOYMENT_TYPE="baremetal"
 INVENTORY_FILE="inventory/inventory.ini"
 VERBOSE=""
 SSH_KEY=""
-VERSION=$(cat "$SCRIPT_DIR/../VERSION" | tr -d '[:space:]')
+VERSION=$(cat "$DATA_DIR/VERSION" | tr -d '[:space:]')
 RELEASE="1"
 
 # Print usage information
@@ -60,7 +68,7 @@ show_version() {
 
 # Run installation tests
 run_tests() {
-    local playbook="/usr/share/chasm/playbooks/test.yml"
+    local playbook="$DATA_DIR/playbooks/test.yml"
     if [ ! -f "$playbook" ]; then
         echo "Error: Test playbook not found at $playbook"
         return 1
@@ -110,11 +118,11 @@ if [ -z "$COMMAND" ]; then
 fi
 
 # Source command files
-source "$SCRIPT_DIR/commands/common.sh"
-source "$SCRIPT_DIR/commands/generate.sh"
-source "$SCRIPT_DIR/commands/verify.sh"
-source "$SCRIPT_DIR/commands/preflight.sh"
-source "$SCRIPT_DIR/commands/deploy.sh"
+source "$CMD_DIR/common.sh"
+source "$CMD_DIR/generate.sh"
+source "$CMD_DIR/verify.sh"
+source "$CMD_DIR/preflight.sh"
+source "$CMD_DIR/deploy.sh"
 
 # Execute commands
 case "$COMMAND" in

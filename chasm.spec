@@ -31,14 +31,21 @@ Chasm is an Ansible-based infrastructure management system that provides automat
 %install
 # Create necessary directories
 mkdir -p %{buildroot}%{_bindir}
+mkdir -p %{buildroot}%{_libexecdir}/chasm/commands
 mkdir -p %{buildroot}%{_datadir}/chasm
 mkdir -p %{buildroot}%{_datadir}/chasm/playbooks
 mkdir -p %{buildroot}%{_datadir}/chasm/roles
 mkdir -p %{buildroot}%{_datadir}/chasm/inventory
 mkdir -p %{buildroot}%{_datadir}/chasm/tools
 
+# Install VERSION file
+install -m 644 VERSION %{buildroot}%{_datadir}/chasm/VERSION
+
 # Install the main chasm script
 install -m 755 tools/chasm %{buildroot}%{_bindir}/chasm
+
+# Install command scripts
+install -m 755 tools/commands/* %{buildroot}%{_libexecdir}/chasm/commands/
 
 # Install playbooks
 cp -r playbooks/* %{buildroot}%{_datadir}/chasm/playbooks/
@@ -49,8 +56,8 @@ cp -r roles/* %{buildroot}%{_datadir}/chasm/roles/
 # Install inventory
 cp -r inventory/* %{buildroot}%{_datadir}/chasm/inventory/
 
-# Install tools
-cp -r tools/* %{buildroot}%{_datadir}/chasm/tools/
+# Install tools (excluding main script and commands)
+find tools -type f -not -name 'chasm' -not -path 'tools/commands/*' -exec cp {} %{buildroot}%{_datadir}/chasm/tools/ \;
 
 # Create ansible.cfg
 cat > %{buildroot}%{_datadir}/chasm/ansible.cfg << 'EOF'
@@ -69,18 +76,10 @@ mkdir -p %{buildroot}%{_datadir}/chasm/inventory/host_vars
 # Create group_vars directory
 mkdir -p %{buildroot}%{_datadir}/chasm/inventory/group_vars
 
-# Create playbooks directory
-mkdir -p %{buildroot}%{_datadir}/chasm/playbooks
-
-# Create roles directory
-mkdir -p %{buildroot}%{_datadir}/chasm/roles
-
-# Create tools directory
-mkdir -p %{buildroot}%{_datadir}/chasm/tools
-
 %files
 %{_datadir}/chasm/
 %{_bindir}/chasm
+%{_libexecdir}/chasm/
 
 %changelog
 * %(date "+%a %b %d %Y") %{packager} - %{version}-%{release}
