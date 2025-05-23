@@ -158,19 +158,6 @@ jobs:
           echo "" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Create GitHub Release
-        if: startsWith(github.ref, 'refs/tags/') && matrix.distro == 'rhel9'
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            ~/release-rpms/*.rpm
-            ~/rpmbuild/RPMS/noarch/*.rpm
-          body: ${{ steps.release_notes.outputs.notes }}
-          generate_release_notes: false
-          prerelease: ${{ steps.release_type.outputs.is_prerelease }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   test-rpm:
     needs: build-rpm
     strategy:
@@ -256,4 +243,70 @@ jobs:
           
           # Clean up
           cd "$GITHUB_WORKSPACE"
-          rm -rf "$TEST_DIR" 
+          rm -rf "$TEST_DIR"
+
+      - name: Upload tested RPM
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/upload-artifact@v4
+        with:
+          name: tested-rpm-${{ matrix.distro }}
+          path: ./rpm/*.rpm
+
+  create-release:
+    needs: test-rpm
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download all tested RPMs
+        uses: actions/download-artifact@v4
+        with:
+          pattern: tested-rpm-*
+          path: release-rpms
+          merge-multiple: true
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          # Get the previous tag
+          PREV_TAG=$(git describe --tags --abbrev=0 ${{ github.ref }}^ 2>/dev/null || echo "")
+          
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo "## What's Changed" >> $GITHUB_OUTPUT
+          echo "" >> $GITHUB_OUTPUT
+          
+          if [ -z "$PREV_TAG" ]; then
+            # If no previous tag, get all commits
+            git log --pretty=format:"* %s (%h)" ${{ github.ref }} >> $GITHUB_OUTPUT
+          else
+            # Get commits between tags
+            git log --pretty=format:"* %s (%h)" $PREV_TAG..${{ github.ref }} >> $GITHUB_OUTPUT
+          fi
+          
+          echo "" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Determine release type
+        id: release_type
+        run: |
+          if [[ "${{ github.ref }}" =~ -rc[0-9]+$ ]]; then
+            echo "type=prerelease" >> $GITHUB_OUTPUT
+            echo "is_prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "type=release" >> $GITHUB_OUTPUT
+            echo "is_prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release-rpms/*.rpm
+          body: ${{ steps.release_notes.outputs.notes }}
+          generate_release_notes: false
+          prerelease: ${{ steps.release_type.outputs.is_prerelease }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
