@@ -153,4 +153,38 @@ Deploy Chasm to the target environment:
 
 ## Author
 
-Rob Weiss <rob.weiss@red-alpha.com> 
+Rob Weiss <rob.weiss@red-alpha.com>
+
+## Releases
+
+Chasm is distributed as RPM packages for RHEL 9 and Rocky Linux 9. There are two types of releases:
+
+### Stable Releases
+Stable releases are versioned using semantic versioning (e.g., `v1.0.0`). These releases are thoroughly tested and recommended for production use.
+
+### Release Candidates
+Release candidates (RC) are pre-release versions that are available for testing before the stable release. They are tagged with `-rc` suffix (e.g., `v1.0.0-rc1`).
+
+### Installing from Releases
+
+1. Visit the [GitHub Releases](https://github.com/your-org/chasm/releases) page
+2. Download the appropriate RPM for your distribution:
+   - `chasm-<version>.rhel9.rpm` for RHEL 9
+   - `chasm-<version>.rocky9.rpm` for Rocky Linux 9
+3. Install the RPM:
+   ```bash
+   # For RHEL 9
+   sudo dnf install chasm-<version>.rhel9.rpm
+
+   # For Rocky Linux 9
+   sudo dnf install chasm-<version>.rocky9.rpm
+   ```
+
+### Testing Release Candidates
+
+To test a release candidate:
+
+1. Go to the [GitHub Releases](https://github.com/your-org/chasm/releases) page
+2. Look for releases marked as "Pre-release"
+3. Download and install the RC RPM as described above
+4. Test the functionality and report any issues on GitHub 
