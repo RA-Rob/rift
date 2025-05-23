@@ -123,9 +123,12 @@ jobs:
           cd ~/rpmbuild/SPECS
           rpmbuild --define "_topdir $HOME/rpmbuild" -bb chasm.spec
           
-          # Copy RPMs to a directory with clear names
+          # Get tag name from ref
+          TAG_NAME=$(echo "${{ github.ref }}" | sed 's|refs/tags/||')
+          
+          # Copy RPMs to a directory with clear names including version
           mkdir -p ~/release-rpms
-          cp ~/rpmbuild/RPMS/noarch/*.rpm ~/release-rpms/chasm-${{ matrix.distro }}.rpm
+          cp ~/rpmbuild/RPMS/noarch/*.rpm ~/release-rpms/chasm-${TAG_NAME}-${{ matrix.distro }}.rpm
 
       - name: Upload RPM artifact
         uses: actions/upload-artifact@v4
@@ -170,53 +173,37 @@ jobs:
 
   test-rpm:
     needs: build-rpm
+    strategy:
+      matrix:
+        distro: [rhel9, rocky9]
     runs-on: ubuntu-latest
     steps:
-      - name: Download RHEL RPM artifact
+      - name: Download RPM artifact
         uses: actions/download-artifact@v4
         with:
-          name: chasm-rpm-rhel9
-          path: ./rhel
-          pattern: '*.rpm'
-          merge-multiple: true
-
-      - name: Download Rocky Linux RPM artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: chasm-rpm-rocky9
-          path: ./rocky
+          name: chasm-rpm-${{ matrix.distro }}
+          path: ./rpm
           pattern: '*.rpm'
           merge-multiple: true
 
       - name: List downloaded artifacts
         run: |
-          echo "Contents of rhel directory:"
-          ls -la ./rhel || true
-          echo "Contents of rocky directory:"
-          ls -la ./rocky || true
+          echo "Contents of rpm directory:"
+          ls -la ./rpm || true
 
-      - name: Run basic RPM tests
+      - name: Test RPM on ${{ matrix.distro }}
         run: |
           # Create a temporary directory for testing
           TEST_DIR=$(mktemp -d)
           cd "$TEST_DIR"
           
-          # Copy RPMs to test directory if they exist
-          if [ -d "$GITHUB_WORKSPACE/rhel" ] && ls "$GITHUB_WORKSPACE/rhel"/*.rpm 1> /dev/null 2>&1; then
-              echo "Copying RHEL RPMs..."
-              cp "$GITHUB_WORKSPACE/rhel"/*.rpm .
-          else
-              echo "No RHEL RPMs found"
-          fi
+          # Get tag name from ref for artifact naming
+          TAG_NAME=$(echo "${{ github.ref }}" | sed 's|refs/tags/||')
           
-          if [ -d "$GITHUB_WORKSPACE/rocky" ] && ls "$GITHUB_WORKSPACE/rocky"/*.rpm 1> /dev/null 2>&1; then
-              echo "Copying Rocky Linux RPMs..."
-              cp "$GITHUB_WORKSPACE/rocky"/*.rpm .
-          else
-              echo "No Rocky Linux RPMs found"
-          fi
+          # Copy RPM to test directory
+          cp "$GITHUB_WORKSPACE/rpm"/*.rpm ./chasm-${TAG_NAME}-${{ matrix.distro }}.rpm
           
-          # Verify RPMs are present
+          # Verify RPM is present
           if ! ls *.rpm 1> /dev/null 2>&1; then
               echo "Error: No RPM files found in test directory"
               exit 1
@@ -229,42 +216,43 @@ jobs:
               CONTAINER_CMD=docker
           fi
           
-          # Test on Rocky Linux 9
-          echo "Testing on Rocky Linux 9..."
-          $CONTAINER_CMD run --rm -v "$TEST_DIR:/rpms" \
-              -w /rpms quay.io/rockylinux/rockylinux:9 \
-              bash -c '
-                  dnf -y install epel-release
-                  dnf -y install python3 python3-pip
-                  dnf -y install ansible-core
-                  dnf -y install /rpms/*.rpm
-                  chasm test
-              '
-          
-          # Test on RHEL 9
-          echo "Testing on RHEL 9..."
-          $CONTAINER_CMD run --rm -v "$TEST_DIR:/rpms" \
-              -w /rpms registry.access.redhat.com/ubi9/ubi:latest \
-              bash -c '
-                  # Enable CRB repository
-                  dnf -y install dnf-utils
-                  dnf config-manager --set-enabled crb
-                  
-                  # Install EPEL
-                  dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
-                  
-                  # Install Python and pip
-                  dnf -y install python3 python3-pip
-                  
-                  # Install ansible-core via pip
-                  pip3 install "ansible-core>=2.9"
-                  
-                  # Install Chasm RPM without dependency checking
-                  rpm -ivh --nodeps /rpms/*.rpm
-                  
-                  # Run tests
-                  chasm test
-              '
+          # Test based on distribution
+          if [ "${{ matrix.distro }}" = "rocky9" ]; then
+              echo "Testing on Rocky Linux 9..."
+              $CONTAINER_CMD run --rm -v "$TEST_DIR:/rpms" \
+                  -w /rpms quay.io/rockylinux/rockylinux:9 \
+                  bash -c '
+                      dnf -y install epel-release
+                      dnf -y install python3 python3-pip
+                      dnf -y install ansible-core
+                      dnf -y install /rpms/*.rpm
+                      chasm --version || exit 1
+                  '
+          else
+              echo "Testing on RHEL 9..."
+              $CONTAINER_CMD run --rm -v "$TEST_DIR:/rpms" \
+                  -w /rpms registry.access.redhat.com/ubi9/ubi:latest \
+                  bash -c '
+                      # Enable CRB repository
+                      dnf -y install dnf-utils
+                      dnf config-manager --set-enabled crb
+                      
+                      # Install EPEL
+                      dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+                      
+                      # Install Python and pip
+                      dnf -y install python3 python3-pip
+                      
+                      # Install ansible-core via pip
+                      pip3 install "ansible-core>=2.9"
+                      
+                      # Install Chasm RPM without dependency checking
+                      rpm -ivh --nodeps /rpms/*.rpm
+                      
+                      # Test chasm command
+                      chasm --version || exit 1
+                  '
+          fi
           
           # Clean up
           cd "$GITHUB_WORKSPACE"
