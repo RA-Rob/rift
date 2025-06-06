@@ -79,16 +79,17 @@ cp -r roles/* %{buildroot}%{_datadir}/chasm/roles/
 cp -r inventory/* %{buildroot}%{_datadir}/chasm/inventory/
 
 # Install tools (excluding main script and commands)
-find tools -type f -not -name chasm -not -path 'tools/commands/*' -exec cp {} %{buildroot}%{_datadir}/chasm/tools/ \;
+find tools -type f -not -name chasm -not -path "tools/commands/*" -exec cp {} %{buildroot}%{_datadir}/chasm/tools/ \;
 
 # Install Rocky9Ansible tools if available
-if [ -d "Rocky9Ansible/tools" ]; then
-    TOOLS=$(ls Rocky9Ansible/tools/*.sh 2>/dev/null || true)
-    if [ -n "$TOOLS" ]; then
-        cp -r Rocky9Ansible/tools/*.sh %{buildroot}%{_datadir}/chasm/tools/rocky9/
-        # Set macro to indicate Rocky9 tools were installed
-        echo "%global have_rocky9_tools 1" >> %{_builddir}/%{name}-%{version}/.rpmmacros
-    fi
+if test -d Rocky9Ansible/tools; then
+    for f in Rocky9Ansible/tools/*.sh; do
+        if test -f "$f"; then
+            cp "$f" %{buildroot}%{_datadir}/chasm/tools/rocky9/
+            echo "%global have_rocky9_tools 1" > %{_builddir}/%{name}-%{version}/.rpmmacros
+            break
+        fi
+    done
 fi
 
 # Create ansible.cfg
