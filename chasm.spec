@@ -82,7 +82,7 @@ cp -r inventory/* %{buildroot}%{_datadir}/chasm/inventory/
 find tools -type f -not -name 'chasm' -not -path 'tools/commands/*' -exec cp {} %{buildroot}%{_datadir}/chasm/tools/ \;
 
 # Install Rocky9Ansible tools
-install -m 755 Rocky9Ansible/tools/*.sh %{buildroot}%{_datadir}/chasm/tools/rocky9/
+cp -r Rocky9Ansible/tools/*.sh %{buildroot}%{_datadir}/chasm/tools/rocky9/
 
 # Create ansible.cfg
 cat > %{buildroot}%{_datadir}/chasm/ansible.cfg << 'EOF'
