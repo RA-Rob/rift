@@ -1,0 +1,134 @@
+name: Test Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test-build:
+    strategy:
+      matrix:
+        distro: [rhel9, rocky9]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up RPM build environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rpm rpm2cpio cpio alien
+
+      - name: Create RPM build directories
+        run: |
+          mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+
+      - name: Update spec file version
+        run: |
+          # Read and clean version string
+          VERSION=$(cat VERSION | tr -d '[:space:]')
+          echo "Updating spec file with version: '${VERSION}'"
+          
+          # Use development release number for test builds
+          RELEASE="0.dev$(date +%Y%m%d%H%M)%{?dist}"
+          
+          # Update version and release in spec file
+          sed -i "s/^Version:.*/Version:        ${VERSION}/" chasm.spec
+          sed -i "s/^Release:.*/Release:        ${RELEASE}/" chasm.spec
+          
+          # Copy spec file to SPECS directory
+          cp chasm.spec ~/rpmbuild/SPECS/
+          
+          # Verify spec file
+          echo "Verifying spec file contents:"
+          cat ~/rpmbuild/SPECS/chasm.spec
+
+      - name: Create source tarball
+        run: |
+          # Get current directory
+          WORKSPACE_DIR=$(pwd)
+          VERSION=$(cat VERSION | tr -d '[:space:]')
+          
+          # Create temporary directory
+          TEMP_DIR=$(mktemp -d)
+          VERSION_DIR="${TEMP_DIR}/chasm-${VERSION}"
+          mkdir -p "${VERSION_DIR}"
+          
+          # Copy all files except .git and temp directory
+          find "${WORKSPACE_DIR}" -maxdepth 1 -not -name '.' -not -name '..' -not -name '.git' -not -name "${TEMP_DIR##*/}" -exec cp -rv {} "${VERSION_DIR}/" \;
+          
+          # Create the tarball
+          cd "${TEMP_DIR}"
+          tar -czvf "${HOME}/rpmbuild/SOURCES/chasm-${VERSION}.tar.gz" "chasm-${VERSION}"
+          
+          # Clean up
+          cd "${WORKSPACE_DIR}"
+          rm -rf "${TEMP_DIR}"
+
+      - name: Build RPM package
+        run: |
+          cd ~/rpmbuild/SPECS
+          rpmbuild --define "_topdir $HOME/rpmbuild" -bb chasm.spec
+
+      - name: Test RPM on ${{ matrix.distro }}
+        run: |
+          # Create a temporary directory for testing
+          TEST_DIR=$(mktemp -d)
+          cd "$TEST_DIR"
+          
+          # Copy RPM to test directory
+          cp ~/rpmbuild/RPMS/noarch/*.rpm ./
+          
+          # Create a container for testing
+          if command -v podman &> /dev/null; then
+              CONTAINER_CMD=podman
+          else
+              CONTAINER_CMD=docker
+          fi
+          
+          # Test based on distribution
+          if [ "${{ matrix.distro }}" = "rocky9" ]; then
+              echo "Testing on Rocky Linux 9..."
+              $CONTAINER_CMD run --rm -v "$TEST_DIR:/rpms" \
+                  -w /rpms quay.io/rockylinux/rockylinux:9 \
+                  bash -c '
+                      dnf -y install epel-release
+                      dnf -y install python3 python3-pip
+                      dnf -y install ansible-core
+                      dnf -y install /rpms/*.rpm
+                      chasm version || exit 1
+                  '
+          else
+              echo "Testing on RHEL 9..."
+              $CONTAINER_CMD run --rm -v "$TEST_DIR:/rpms" \
+                  -w /rpms registry.access.redhat.com/ubi9/ubi:latest \
+                  bash -c '
+                      # Enable CRB repository
+                      dnf -y install dnf-utils
+                      dnf config-manager --set-enabled crb
+                      
+                      # Install EPEL
+                      dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+                      
+                      # Install Python and pip
+                      dnf -y install python3 python3-pip
+                      
+                      # Install ansible-core via pip
+                      pip3 install "ansible-core>=2.9"
+                      
+                      # Install Chasm RPM without dependency checking
+                      rpm -ivh --nodeps /rpms/*.rpm
+                      
+                      # Test chasm command
+                      chasm version || exit 1
+                  '
+          fi
+          
+          # Clean up
+          cd "$GITHUB_WORKSPACE"
+          rm -rf "$TEST_DIR" 

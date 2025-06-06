@@ -1,7 +1,14 @@
 # Chasm
 
 [![Build RPM](https://github.com/RA-Rob/chasm/actions/workflows/build-rpm.yml/badge.svg)](https://github.com/RA-Rob/chasm/actions/workflows/build-rpm.yml)
+[![Test Build](https://github.com/RA-Rob/chasm/actions/workflows/test-build.yml/badge.svg)](https://github.com/RA-Rob/chasm/actions/workflows/test-build.yml)
 ![Version](https://img.shields.io/badge/version-0.0.1-blue.svg)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/downloads/)
+[![Ansible](https://img.shields.io/badge/ansible-2.9%2B-red.svg)](https://docs.ansible.com/)
+[![Documentation](https://img.shields.io/badge/docs-latest-brightgreen.svg)](docs/)
+[![Issues](https://img.shields.io/github/issues/RA-Rob/chasm.svg)](https://github.com/RA-Rob/chasm/issues)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 Ansible-based deployment system for Rocky Linux 9 and RHEL 9 environments.
 
