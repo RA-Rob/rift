@@ -105,7 +105,7 @@ mkdir -p %{buildroot}%{_datadir}/chasm/inventory/group_vars
 %attr(755,root,root) %{_libexecdir}/chasm/commands/*.sh
 %attr(755,root,root) %{_datadir}/chasm/tools/*.sh
 %dir %{_datadir}/chasm/tools/rocky9
-%optional %attr(755,root,root) %{_datadir}/chasm/tools/rocky9/*.sh
+%attr(755,root,root) %{_datadir}/chasm/tools/rocky9/*.sh %optional
 
 %changelog
 * %(date "+%a %b %d %Y") %{packager} - %{version}-%{release}
