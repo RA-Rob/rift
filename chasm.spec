@@ -82,8 +82,10 @@ cp -r inventory/* %{buildroot}%{_datadir}/chasm/inventory/
 find tools -type f -not -name 'chasm' -not -path 'tools/commands/*' -exec cp {} %{buildroot}%{_datadir}/chasm/tools/ \;
 
 # Install Rocky9Ansible tools if available
-if [ -d "Rocky9Ansible/tools" ]; then
+if [ -d "Rocky9Ansible/tools" ] && [ -n "$(ls -A Rocky9Ansible/tools/*.sh 2>/dev/null)" ]; then
     cp -r Rocky9Ansible/tools/*.sh %{buildroot}%{_datadir}/chasm/tools/rocky9/ || :
+    # Set macro to indicate Rocky9 tools were installed
+    echo "%global have_rocky9_tools 1" >> %{_builddir}/%{name}-%{version}/.rpmmacros
 fi
 
 # Create ansible.cfg
@@ -106,12 +108,16 @@ mkdir -p %{buildroot}%{_datadir}/chasm/inventory/group_vars
 %files
 %doc README.md
 %doc %{_docdir}/%{name}/vm-management.md
+%if 0%{?_licensedir:1}
 %license LICENSE
+%endif
 %{_datadir}/chasm/
 %{_bindir}/chasm
 %{_libexecdir}/chasm/
 %attr(755,root,root) %{_libexecdir}/chasm/commands/vm-*.sh
+%if 0%{?have_rocky9_tools:1}
 %attr(755,root,root) %{_datadir}/chasm/tools/rocky9/*.sh
+%endif
 
 %changelog
 * %(date "+%a %b %d %Y") %{packager} - %{version}-%{release}
