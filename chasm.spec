@@ -8,6 +8,9 @@ URL:            https://github.com/RA-Rob/chasm
 Source0:        %{name}-%{version}.tar.gz
 BuildArch:      noarch
 
+# Define conditionals
+%define _with_rocky9_tools %(if [ -f %{buildroot}%{_datadir}/chasm/.rocky9_tools_installed ]; then echo 1; else echo 0; fi)
+
 # Common requirements for both RHEL and Rocky
 Requires:       ansible-core >= 2.9
 Requires:       python3 >= 3.9
