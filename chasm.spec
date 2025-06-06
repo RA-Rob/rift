@@ -46,7 +46,7 @@ For detailed documentation, see %{_docdir}/%{name}/vm-management.md
 # No build step needed for Ansible playbooks
 
 %install
-# Create necessary directories
+rm -rf %{buildroot}
 mkdir -p %{buildroot}%{_bindir}
 mkdir -p %{buildroot}%{_libexecdir}/chasm/commands
 mkdir -p %{buildroot}%{_datadir}/chasm
@@ -69,28 +69,16 @@ install -m 755 tools/chasm %{buildroot}%{_bindir}/chasm
 # Install command scripts
 install -m 755 tools/commands/*.sh %{buildroot}%{_libexecdir}/chasm/commands/
 
-# Install playbooks
+# Install playbooks, roles, and inventory
 cp -r playbooks/* %{buildroot}%{_datadir}/chasm/playbooks/
-
-# Install roles
 cp -r roles/* %{buildroot}%{_datadir}/chasm/roles/
-
-# Install inventory
 cp -r inventory/* %{buildroot}%{_datadir}/chasm/inventory/
 
-# Install tools (excluding main script and commands)
-find tools -type f -not -name chasm -not -path "tools/commands/*" -exec cp {} %{buildroot}%{_datadir}/chasm/tools/ \;
+# Install tools
+cp tools/[!c]*.sh %{buildroot}%{_datadir}/chasm/tools/ 2>/dev/null || :
 
-# Install Rocky9Ansible tools if available
-if test -d Rocky9Ansible/tools; then
-    for f in Rocky9Ansible/tools/*.sh; do
-        if test -f "$f"; then
-            cp "$f" %{buildroot}%{_datadir}/chasm/tools/rocky9/
-            echo "%global have_rocky9_tools 1" > %{_builddir}/%{name}-%{version}/.rpmmacros
-            break
-        fi
-    done
-fi
+# Install Rocky9Ansible tools if present
+cp Rocky9Ansible/tools/*.sh %{buildroot}%{_datadir}/chasm/tools/rocky9/ 2>/dev/null || :
 
 # Create ansible.cfg
 cat > %{buildroot}%{_datadir}/chasm/ansible.cfg << 'EOF'
@@ -103,25 +91,19 @@ stdout_callback = yaml
 bin_ansible_callbacks = True
 EOF
 
-# Create host_vars directory
+# Create inventory directories
 mkdir -p %{buildroot}%{_datadir}/chasm/inventory/host_vars
-
-# Create group_vars directory
 mkdir -p %{buildroot}%{_datadir}/chasm/inventory/group_vars
 
 %files
 %doc README.md
 %doc %{_docdir}/%{name}/vm-management.md
-%if 0%{?_licensedir:1}
-%license LICENSE
-%endif
 %{_datadir}/chasm/
 %{_bindir}/chasm
 %{_libexecdir}/chasm/
-%attr(755,root,root) %{_libexecdir}/chasm/commands/vm-*.sh
-%if 0%{?have_rocky9_tools:1}
+%attr(755,root,root) %{_libexecdir}/chasm/commands/*.sh
+%attr(755,root,root) %{_datadir}/chasm/tools/*.sh
 %attr(755,root,root) %{_datadir}/chasm/tools/rocky9/*.sh
-%endif
 
 %changelog
 * %(date "+%a %b %d %Y") %{packager} - %{version}-%{release}
