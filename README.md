@@ -1,6 +1,7 @@
 # Chasm
 
 [![Build RPM](https://github.com/RA-Rob/chasm/actions/workflows/build-rpm.yml/badge.svg)](https://github.com/RA-Rob/chasm/actions/workflows/build-rpm.yml)
+![Version](https://img.shields.io/badge/version-0.0.1-blue.svg)
 
 Ansible-based deployment system for Rocky Linux 9 and RHEL 9 environments.
 
@@ -89,6 +90,13 @@ Deploy Chasm to the target environment:
 ./tools/chasm deploy
 ```
 
+### Version Information
+
+Display the current version:
+```bash
+./tools/chasm version
+```
+
 ### Command Options
 
 - `-t, --type`: Deployment type (baremetal|cloud) [default: baremetal]
@@ -149,7 +157,7 @@ Deploy Chasm to the target environment:
 
 ## License
 
-[Your License Here]
+MIT License
 
 ## Author
 
@@ -165,9 +173,15 @@ Stable releases are versioned using semantic versioning (e.g., `v1.0.0`). These 
 ### Release Candidates
 Release candidates (RC) are pre-release versions that are available for testing before the stable release. They are tagged with `-rc` suffix (e.g., `v1.0.0-rc1`).
 
+### Current Release Status
+The current version is 0.0.1, with release candidate v0.0.1-rc1 available for testing. This release includes:
+- Fixed RPM build issues
+- Corrected version command implementation
+- Improved GitHub Actions workflow for RPM asset publishing
+
 ### Installing from Releases
 
-1. Visit the [GitHub Releases](https://github.com/your-org/chasm/releases) page
+1. Visit the [GitHub Releases](https://github.com/RA-Rob/chasm/releases) page
 2. Download the appropriate RPM for your distribution:
    - `chasm-<version>.rhel9.rpm` for RHEL 9
    - `chasm-<version>.rocky9.rpm` for Rocky Linux 9
@@ -184,7 +198,7 @@ Release candidates (RC) are pre-release versions that are available for testing 
 
 To test a release candidate:
 
-1. Go to the [GitHub Releases](https://github.com/your-org/chasm/releases) page
+1. Go to the [GitHub Releases](https://github.com/RA-Rob/chasm/releases) page
 2. Look for releases marked as "Pre-release"
 3. Download and install the RC RPM as described above
 4. Test the functionality and report any issues on GitHub 
