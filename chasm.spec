@@ -11,7 +11,7 @@ BuildArch:      noarch
 # Define conditionals
 %define _with_rocky9_tools %(if [ -f %{buildroot}%{_datadir}/chasm/.rocky9_tools_installed ]; then echo 1; else echo 0; fi)
 
-# Common requirements for both RHEL and Rocky
+# Common requirements
 Requires:       ansible-core >= 2.9
 Requires:       python3 >= 3.9
 Requires:       python3-pip
@@ -22,9 +22,9 @@ Requires:       container-selinux
 Requires:       device-mapper-persistent-data
 Requires:       lvm2
 
-# Cloud provider requirements
-Requires:       awscli
-Requires:       azure-cli
+# Cloud provider requirements (optional)
+Suggests:       awscli
+Suggests:       azure-cli
 
 # VM management requirements
 Requires:       libvirt-client
@@ -39,6 +39,8 @@ The following commands are available:
 - chasm vm-create: Create VMs on KVM, AWS, or Azure
 - chasm vm-cleanup: Clean up VMs and associated resources
 - chasm vm-test: Test VM connectivity and configuration
+
+Note: AWS and Azure CLI tools are optional dependencies. Install them separately if you need cloud provider support.
 
 For detailed documentation, see %{_docdir}/%{name}/vm-management.md
 
