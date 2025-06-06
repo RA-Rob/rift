@@ -78,6 +78,7 @@ cp -r inventory/* %{buildroot}%{_datadir}/chasm/inventory/
 cp tools/[!c]*.sh %{buildroot}%{_datadir}/chasm/tools/ 2>/dev/null || :
 
 # Install Rocky9Ansible tools if present
+mkdir -p %{buildroot}%{_datadir}/chasm/tools/rocky9
 cp Rocky9Ansible/tools/*.sh %{buildroot}%{_datadir}/chasm/tools/rocky9/ 2>/dev/null || :
 
 # Create ansible.cfg
@@ -103,7 +104,8 @@ mkdir -p %{buildroot}%{_datadir}/chasm/inventory/group_vars
 %{_libexecdir}/chasm/
 %attr(755,root,root) %{_libexecdir}/chasm/commands/*.sh
 %attr(755,root,root) %{_datadir}/chasm/tools/*.sh
-%attr(755,root,root) %{_datadir}/chasm/tools/rocky9/*.sh
+%dir %{_datadir}/chasm/tools/rocky9
+%attr(755,root,root) %{_datadir}/chasm/tools/rocky9/*.sh || :
 
 %changelog
 * %(date "+%a %b %d %Y") %{packager} - %{version}-%{release}
