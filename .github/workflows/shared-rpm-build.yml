@@ -1,0 +1,105 @@
+name: Shared RPM Build
+
+on:
+  workflow_call:
+    inputs:
+      version_type:
+        description: "Type of version to use (dev, rc, release)"
+        required: true
+        type: string
+      distro:
+        description: "Distribution to build for (rhel9, rocky9)"
+        required: true
+        type: string
+    outputs:
+      rpm_path:
+        description: "Path to the built RPM"
+        value: ${{ jobs.build.outputs.rpm_path }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      rpm_path: ${{ steps.build.outputs.rpm_path }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Update spec file version
+        run: |
+          # Read and clean version string
+          VERSION=$(cat VERSION | tr -d '[:space:]')
+          echo "Updating spec file with version: '${VERSION}'"
+          
+          # Determine release number based on version type
+          case "${{ inputs.version_type }}" in
+            dev)
+              RELEASE="0.dev$(date +%Y%m%d%H%M)%{?dist}"
+              ;;
+            rc)
+              RC_NUM=$(echo "${{ github.ref }}" | grep -o 'rc[0-9]\+' | sed 's/rc//')
+              RELEASE="0.rc${RC_NUM}%{?dist}"
+              ;;
+            release)
+              RELEASE="1%{?dist}"
+              ;;
+          esac
+          
+          # Update version and release in spec file
+          sed -i "s/^Version:.*/Version:        ${VERSION}/" chasm.spec
+          sed -i "s/^Release:.*/Release:        ${RELEASE}/" chasm.spec
+          
+          # Copy spec file to SPECS directory
+          cp chasm.spec ~/rpmbuild/SPECS/
+          
+          # Verify spec file
+          echo "Verifying spec file contents:"
+          cat ~/rpmbuild/SPECS/chasm.spec
+
+      - name: Create source tarball
+        run: |
+          # Get current directory
+          WORKSPACE_DIR=$(pwd)
+          VERSION=$(cat VERSION | tr -d '[:space:]')
+          
+          # Create temporary directory
+          TEMP_DIR=$(mktemp -d)
+          VERSION_DIR="${TEMP_DIR}/chasm-${VERSION}"
+          mkdir -p "${VERSION_DIR}"
+          
+          # Copy all files except .git and temp directory
+          find "${WORKSPACE_DIR}" -maxdepth 1 -not -name '.' -not -name '..' -not -name '.git' -not -name "${TEMP_DIR##*/}" -exec cp -rv {} "${VERSION_DIR}/" \;
+          
+          # Create the tarball
+          cd "${TEMP_DIR}"
+          tar -czvf "${HOME}/rpmbuild/SOURCES/chasm-${VERSION}.tar.gz" "chasm-${VERSION}"
+          
+          # Clean up
+          cd "${WORKSPACE_DIR}"
+          rm -rf "${TEMP_DIR}"
+
+      - name: Build RPM package
+        id: build
+        run: |
+          cd ~/rpmbuild/SPECS
+          # Ensure Sphinx is available in the build environment
+          python3 -c "import sphinx; import sphinx_rtd_theme" || exit 1
+          rpmbuild --define "_topdir $HOME/rpmbuild" -bb chasm.spec
+          
+          # Get tag name or commit hash for artifact naming
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            TAG_NAME=$(echo "${{ github.ref }}" | sed 's|refs/tags/||')
+          else
+            TAG_NAME=$(git rev-parse --short HEAD)
+          fi
+          
+          # Copy RPM to a directory with clear naming
+          mkdir -p ~/release-rpms
+          RPM_PATH=~/release-rpms/chasm-${TAG_NAME}-${{ inputs.distro }}.rpm
+          cp ~/rpmbuild/RPMS/noarch/*.rpm $RPM_PATH
+          
+          # Set output
+          echo "rpm_path=$RPM_PATH" >> $GITHUB_OUTPUT 

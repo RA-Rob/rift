@@ -1,0 +1,79 @@
+name: Shared RPM Test
+
+on:
+  workflow_call:
+    inputs:
+      rpm_path:
+        description: "Path to the RPM to test"
+        required: true
+        type: string
+      distro:
+        description: "Distribution to test on (rhel9, rocky9)"
+        required: true
+        type: string
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Test RPM on ${{ inputs.distro }}
+        run: |
+          # Create a temporary directory for testing
+          TEST_DIR=$(mktemp -d)
+          cd "$TEST_DIR"
+          
+          # Copy RPM to test directory
+          cp "${{ inputs.rpm_path }}" ./
+          
+          # Create a container for testing
+          if command -v podman &> /dev/null; then
+              CONTAINER_CMD=podman
+          else
+              CONTAINER_CMD=docker
+          fi
+          
+          # Test based on distribution
+          if [ "${{ inputs.distro }}" = "rocky9" ]; then
+              echo "Testing on Rocky Linux 9..."
+              $CONTAINER_CMD run --rm -v "$TEST_DIR:/rpms" \
+                  -w /rpms quay.io/rockylinux/rockylinux:9 \
+                  bash -c '
+                      dnf -y install epel-release
+                      dnf -y install python3 python3-pip
+                      dnf -y install ansible-core
+                      dnf -y install python3-sphinx python3-sphinx-rtd-theme
+                      dnf -y install /rpms/*.rpm
+                      chasm version || exit 1
+                  '
+          else
+              echo "Testing on RHEL 9..."
+              $CONTAINER_CMD run --rm -v "$TEST_DIR:/rpms" \
+                  -w /rpms registry.access.redhat.com/ubi9/ubi:latest \
+                  bash -c '
+                      # Enable CRB repository
+                      dnf -y install dnf-utils
+                      dnf config-manager --set-enabled crb
+                      
+                      # Install EPEL
+                      dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+                      
+                      # Install Python and pip
+                      dnf -y install python3 python3-pip
+                      
+                      # Install ansible-core via pip
+                      pip3 install "ansible-core>=2.9"
+                      
+                      # Install Sphinx dependencies
+                      dnf -y install python3-sphinx python3-sphinx-rtd-theme
+                      
+                      # Install Chasm RPM without dependency checking
+                      rpm -ivh --nodeps /rpms/*.rpm
+                      
+                      # Test chasm command
+                      chasm version || exit 1
+                  '
+          fi
+          
+          # Clean up
+          cd "$GITHUB_WORKSPACE"
+          rm -rf "$TEST_DIR" 

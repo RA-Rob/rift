@@ -13,252 +13,48 @@ permissions:
   packages: write  # Required for uploading artifacts
 
 jobs:
-  build-rpm:
-    strategy:
-      matrix:
-        distro: [rhel9, rocky9]
+  setup-env:
+    uses: ./.github/workflows/shared-build-env.yml
+
+  determine-version:
     runs-on: ubuntu-latest
+    outputs:
+      version_type: ${{ steps.version.outputs.type }}
+      is_prerelease: ${{ steps.version.outputs.is_prerelease }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Fetch all history for release notes
-
-      - name: Set up RPM build environment
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y rpm rpm2cpio cpio alien python3-sphinx python3-sphinx-rtd-theme python3-pip
-          pip3 install sphinx-rtd-theme
-
-      - name: Create RPM build directories
-        run: |
-          mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
-
-      - name: Update spec file version
-        run: |
-          # Read and clean version string
-          VERSION=$(cat VERSION | tr -d '[:space:]')
-          echo "Updating spec file with version: '${VERSION}'"
-          
-          # Determine if this is a release candidate
-          if [[ "${{ github.ref }}" =~ -rc[0-9]+$ ]]; then
-            RC_NUM=$(echo "${{ github.ref }}" | grep -o 'rc[0-9]\+' | sed 's/rc//')
-            RELEASE="0.rc${RC_NUM}%{?dist}"
-          else
-            RELEASE="1%{?dist}"
-          fi
-          
-          # Update version and release in spec file
-          sed -i "s/^Version:.*/Version:        ${VERSION}/" chasm.spec
-          sed -i "s/^Release:.*/Release:        ${RELEASE}/" chasm.spec
-          
-          # Copy spec file to SPECS directory
-          cp chasm.spec ~/rpmbuild/SPECS/
-          
-          # Verify spec file
-          echo "Verifying spec file contents:"
-          cat ~/rpmbuild/SPECS/chasm.spec
-
-      - name: Create source tarball
-        run: |
-          # Get current directory
-          WORKSPACE_DIR=$(pwd)
-          echo "Workspace directory: ${WORKSPACE_DIR}"
-          
-          # Read and clean version string
-          VERSION=$(cat VERSION | tr -d '[:space:]')
-          echo "Creating tarball for version: '${VERSION}'"
-          
-          # Create temporary directory in workspace
-          TEMP_DIR=$(mktemp -d)
-          echo "Created temporary directory: ${TEMP_DIR}"
-          
-          # Create versioned directory
-          VERSION_DIR="${TEMP_DIR}/chasm-${VERSION}"
-          mkdir -p "${VERSION_DIR}"
-          echo "Created version directory: ${VERSION_DIR}"
-          
-          # Copy all files except .git and temp directory
-          echo "Copying files to version directory..."
-          find "${WORKSPACE_DIR}" -maxdepth 1 -not -name '.' -not -name '..' -not -name '.git' -not -name "${TEMP_DIR##*/}" -exec cp -rv {} "${VERSION_DIR}/" \;
-          
-          # Verify files were copied
-          echo "Verifying files in version directory..."
-          ls -la "${VERSION_DIR}"
-          
-          # Create the tarball
-          echo "Creating tarball..."
-          cd "${TEMP_DIR}"
-          echo "Current directory: $(pwd)"
-          echo "Contents of current directory:"
-          ls -la
-          
-          TARBALL_PATH="${HOME}/rpmbuild/SOURCES/chasm-${VERSION}.tar.gz"
-          echo "Creating tarball at: ${TARBALL_PATH}"
-          
-          tar -czvf "${TARBALL_PATH}" "chasm-${VERSION}"
-          TAR_EXIT_CODE=$?
-          echo "Tar exit code: ${TAR_EXIT_CODE}"
-          
-          # Verify tarball was created
-          echo "Verifying tarball..."
-          ls -l "${TARBALL_PATH}"
-          
-          # Clean up
-          cd "${WORKSPACE_DIR}"
-          rm -rf "${TEMP_DIR}"
-
-      - name: Determine release type
-        id: release_type
+      - name: Determine version type
+        id: version
         run: |
           if [[ "${{ github.ref }}" =~ -rc[0-9]+$ ]]; then
-            echo "type=prerelease" >> $GITHUB_OUTPUT
+            echo "type=rc" >> $GITHUB_OUTPUT
             echo "is_prerelease=true" >> $GITHUB_OUTPUT
           else
             echo "type=release" >> $GITHUB_OUTPUT
             echo "is_prerelease=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Build RPM package
-        run: |
-          cd ~/rpmbuild/SPECS
-          rpmbuild --define "_topdir $HOME/rpmbuild" -bb chasm.spec
-          
-          # Get tag name from ref
-          TAG_NAME=$(echo "${{ github.ref }}" | sed 's|refs/tags/||')
-          
-          # Copy RPMs to a directory with clear names including version
-          mkdir -p ~/release-rpms
-          cp ~/rpmbuild/RPMS/noarch/*.rpm ~/release-rpms/chasm-${TAG_NAME}-${{ matrix.distro }}.rpm
-
-      - name: Upload RPM artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: chasm-rpm-${{ matrix.distro }}
-          path: ~/release-rpms/*.rpm
-
-      - name: Generate release notes
-        id: release_notes
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          # Get the previous tag
-          PREV_TAG=$(git describe --tags --abbrev=0 ${{ github.ref }}^ 2>/dev/null || echo "")
-          
-          echo "notes<<EOF" >> $GITHUB_OUTPUT
-          echo "## What's Changed" >> $GITHUB_OUTPUT
-          echo "" >> $GITHUB_OUTPUT
-          
-          if [ -z "$PREV_TAG" ]; then
-            # If no previous tag, get all commits
-            git log --pretty=format:"* %s (%h)" ${{ github.ref }} >> $GITHUB_OUTPUT
-          else
-            # Get commits between tags
-            git log --pretty=format:"* %s (%h)" $PREV_TAG..${{ github.ref }} >> $GITHUB_OUTPUT
-          fi
-          
-          echo "" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+  build-rpm:
+    needs: [setup-env, determine-version]
+    strategy:
+      matrix:
+        distro: [rhel9, rocky9]
+    uses: ./.github/workflows/shared-rpm-build.yml
+    with:
+      version_type: ${{ needs.determine-version.outputs.version_type }}
+      distro: ${{ matrix.distro }}
 
   test-rpm:
     needs: build-rpm
     strategy:
       matrix:
         distro: [rhel9, rocky9]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download RPM artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: chasm-rpm-${{ matrix.distro }}
-          path: ./rpm
-          pattern: '*.rpm'
-          merge-multiple: true
-
-      - name: List downloaded artifacts
-        run: |
-          echo "Contents of rpm directory:"
-          ls -la ./rpm || true
-
-      - name: Test RPM on ${{ matrix.distro }}
-        run: |
-          # Create a temporary directory for testing
-          TEST_DIR=$(mktemp -d)
-          cd "$TEST_DIR"
-          
-          # Get tag name from ref for artifact naming
-          TAG_NAME=$(echo "${{ github.ref }}" | sed 's|refs/tags/||')
-          
-          # Copy RPM to test directory
-          cp "$GITHUB_WORKSPACE/rpm"/*.rpm ./chasm-${TAG_NAME}-${{ matrix.distro }}.rpm
-          
-          # Verify RPM is present
-          if ! ls *.rpm 1> /dev/null 2>&1; then
-              echo "Error: No RPM files found in test directory"
-              exit 1
-          fi
-          
-          # Create a container for testing
-          if command -v podman &> /dev/null; then
-              CONTAINER_CMD=podman
-          else
-              CONTAINER_CMD=docker
-          fi
-          
-          # Test based on distribution
-          if [ "${{ matrix.distro }}" = "rocky9" ]; then
-              echo "Testing on Rocky Linux 9..."
-              $CONTAINER_CMD run --rm -v "$TEST_DIR:/rpms" \
-                  -w /rpms quay.io/rockylinux/rockylinux:9 \
-                  bash -c '
-                      dnf -y install epel-release
-                      dnf -y install python3 python3-pip
-                      dnf -y install ansible-core
-                      dnf -y install python3-sphinx python3-sphinx-rtd-theme
-                      dnf -y install /rpms/*.rpm
-                      chasm version || exit 1
-                  '
-          else
-              echo "Testing on RHEL 9..."
-              $CONTAINER_CMD run --rm -v "$TEST_DIR:/rpms" \
-                  -w /rpms registry.access.redhat.com/ubi9/ubi:latest \
-                  bash -c '
-                      # Enable CRB repository
-                      dnf -y install dnf-utils
-                      dnf config-manager --set-enabled crb
-                      
-                      # Install EPEL
-                      dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
-                      
-                      # Install Python and pip
-                      dnf -y install python3 python3-pip
-                      
-                      # Install ansible-core via pip
-                      pip3 install "ansible-core>=2.9"
-                      
-                      # Install Sphinx dependencies
-                      dnf -y install python3-sphinx python3-sphinx-rtd-theme
-                      
-                      # Install Chasm RPM without dependency checking
-                      rpm -ivh --nodeps /rpms/*.rpm
-                      
-                      # Test chasm command
-                      chasm version || exit 1
-                  '
-          fi
-          
-          # Clean up
-          cd "$GITHUB_WORKSPACE"
-          rm -rf "$TEST_DIR"
-
-      - name: Upload tested RPM
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: actions/upload-artifact@v4
-        with:
-          name: tested-rpm-${{ matrix.distro }}
-          path: ./rpm/*.rpm
+    uses: ./.github/workflows/shared-rpm-test.yml
+    with:
+      rpm_path: ${{ needs.build-rpm.outputs.rpm_path }}
+      distro: ${{ matrix.distro }}
 
   create-release:
-    needs: test-rpm
+    needs: [test-rpm, determine-version]
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
@@ -295,23 +91,12 @@ jobs:
           echo "" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
-      - name: Determine release type
-        id: release_type
-        run: |
-          if [[ "${{ github.ref }}" =~ -rc[0-9]+$ ]]; then
-            echo "type=prerelease" >> $GITHUB_OUTPUT
-            echo "is_prerelease=true" >> $GITHUB_OUTPUT
-          else
-            echo "type=release" >> $GITHUB_OUTPUT
-            echo "is_prerelease=false" >> $GITHUB_OUTPUT
-          fi
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: release-rpms/*.rpm
           body: ${{ steps.release_notes.outputs.notes }}
           generate_release_notes: false
-          prerelease: ${{ steps.release_type.outputs.is_prerelease }}
+          prerelease: ${{ needs.determine-version.outputs.is_prerelease }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 

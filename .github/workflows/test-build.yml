@@ -8,164 +8,25 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-build:
+  setup-env:
+    uses: ./.github/workflows/shared-build-env.yml
+
+  build-rpm:
+    needs: setup-env
     strategy:
       matrix:
         distro: [rhel9, rocky9]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+    uses: ./.github/workflows/shared-rpm-build.yml
+    with:
+      version_type: dev
+      distro: ${{ matrix.distro }}
 
-      - name: Set up RPM build environment
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y rpm rpm2cpio cpio alien python3-pip
-          
-          # Set up EPEL repository
-          sudo rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm || true
-          
-          # Set up DNF and YUM repositories
-          sudo mkdir -p /etc/yum.repos.d
-          sudo tee /etc/yum.repos.d/epel.repo > /dev/null << 'EOF'
-          [epel]
-          name=Extra Packages for Enterprise Linux 9
-          baseurl=https://dl.fedoraproject.org/pub/epel/9/Everything/x86_64/
-          enabled=1
-          gpgcheck=0
-          EOF
-          
-          # Install Python packages from EPEL
-          sudo dnf install -y --nogpgcheck python3-sphinx python3-sphinx-rtd-theme || true
-          
-          # Install via pip as fallback and make it available to RPM
-          pip3 install sphinx sphinx-rtd-theme
-          sudo mkdir -p /usr/local/lib/python3.*/site-packages/
-          sudo cp -r /usr/local/lib/python3.*/site-packages/* /usr/lib/python3/dist-packages/ || true
-          
-          # Set up RPM macros for Python dependencies
-          sudo mkdir -p /usr/lib/rpm/macros.d
-          sudo tee /usr/lib/rpm/macros.d/macros.python3 > /dev/null << 'EOF'
-          %__python3 /usr/bin/python3
-          %python3_sitelib %(python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib())")
-          %python3_sitearch %(python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1))")
-          %python3_version %(python3 -c "import sys; sys.stdout.write('{0}.{1}'.format(sys.version_info[0], sys.version_info[1]))")
-          %python3_version_nodots %(python3 -c "import sys; sys.stdout.write('{0}{1}'.format(sys.version_info[0], sys.version_info[1]))")
-          EOF
-
-      - name: Create RPM build directories
-        run: |
-          mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
-
-      - name: Update spec file version
-        run: |
-          # Read and clean version string
-          VERSION=$(cat VERSION | tr -d '[:space:]')
-          echo "Updating spec file with version: '${VERSION}'"
-          
-          # Use development release number for test builds
-          RELEASE="0.dev$(date +%Y%m%d%H%M)%{?dist}"
-          
-          # Update version and release in spec file
-          sed -i "s/^Version:.*/Version:        ${VERSION}/" chasm.spec
-          sed -i "s/^Release:.*/Release:        ${RELEASE}/" chasm.spec
-          
-          # Copy spec file to SPECS directory
-          cp chasm.spec ~/rpmbuild/SPECS/
-          
-          # Verify spec file
-          echo "Verifying spec file contents:"
-          cat ~/rpmbuild/SPECS/chasm.spec
-
-      - name: Create source tarball
-        run: |
-          # Get current directory
-          WORKSPACE_DIR=$(pwd)
-          VERSION=$(cat VERSION | tr -d '[:space:]')
-          
-          # Create temporary directory
-          TEMP_DIR=$(mktemp -d)
-          VERSION_DIR="${TEMP_DIR}/chasm-${VERSION}"
-          mkdir -p "${VERSION_DIR}"
-          
-          # Copy all files except .git and temp directory
-          find "${WORKSPACE_DIR}" -maxdepth 1 -not -name '.' -not -name '..' -not -name '.git' -not -name "${TEMP_DIR##*/}" -exec cp -rv {} "${VERSION_DIR}/" \;
-          
-          # Create the tarball
-          cd "${TEMP_DIR}"
-          tar -czvf "${HOME}/rpmbuild/SOURCES/chasm-${VERSION}.tar.gz" "chasm-${VERSION}"
-          
-          # Clean up
-          cd "${WORKSPACE_DIR}"
-          rm -rf "${TEMP_DIR}"
-
-      - name: Build RPM package
-        run: |
-          cd ~/rpmbuild/SPECS
-          # Ensure Sphinx is available in the build environment
-          python3 -c "import sphinx; import sphinx_rtd_theme" || exit 1
-          rpmbuild --define "_topdir $HOME/rpmbuild" -bb chasm.spec
-
-      - name: Test RPM on ${{ matrix.distro }}
-        run: |
-          # Create a temporary directory for testing
-          TEST_DIR=$(mktemp -d)
-          cd "$TEST_DIR"
-          
-          # Copy RPM to test directory
-          cp ~/rpmbuild/RPMS/noarch/*.rpm ./
-          
-          # Create a container for testing
-          if command -v podman &> /dev/null; then
-              CONTAINER_CMD=podman
-          else
-              CONTAINER_CMD=docker
-          fi
-          
-          # Test based on distribution
-          if [ "${{ matrix.distro }}" = "rocky9" ]; then
-              echo "Testing on Rocky Linux 9..."
-              $CONTAINER_CMD run --rm -v "$TEST_DIR:/rpms" \
-                  -w /rpms quay.io/rockylinux/rockylinux:9 \
-                  bash -c '
-                      dnf -y install epel-release
-                      dnf -y install python3 python3-pip
-                      dnf -y install ansible-core
-                      dnf -y install python3-sphinx python3-sphinx-rtd-theme
-                      dnf -y install /rpms/*.rpm
-                      chasm version || exit 1
-                  '
-          else
-              echo "Testing on RHEL 9..."
-              $CONTAINER_CMD run --rm -v "$TEST_DIR:/rpms" \
-                  -w /rpms registry.access.redhat.com/ubi9/ubi:latest \
-                  bash -c '
-                      # Enable CRB repository
-                      dnf -y install dnf-utils
-                      dnf config-manager --set-enabled crb
-                      
-                      # Install EPEL
-                      dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
-                      
-                      # Install Python and pip
-                      dnf -y install python3 python3-pip
-                      
-                      # Install ansible-core via pip
-                      pip3 install "ansible-core>=2.9"
-                      
-                      # Install Sphinx dependencies
-                      dnf -y install python3-sphinx python3-sphinx-rtd-theme
-                      
-                      # Install Chasm RPM without dependency checking
-                      rpm -ivh --nodeps /rpms/*.rpm
-                      
-                      # Test chasm command
-                      chasm version || exit 1
-                  '
-          fi
-          
-          # Clean up
-          cd "$GITHUB_WORKSPACE"
-          rm -rf "$TEST_DIR" 
+  test-rpm:
+    needs: build-rpm
+    strategy:
+      matrix:
+        distro: [rhel9, rocky9]
+    uses: ./.github/workflows/shared-rpm-test.yml
+    with:
+      rpm_path: ${{ needs.build-rpm.outputs.rpm_path }}
+      distro: ${{ matrix.distro }} 
