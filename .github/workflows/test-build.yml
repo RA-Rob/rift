@@ -22,25 +22,29 @@ jobs:
       - name: Set up RPM build environment
         run: |
           sudo apt-get update
-          sudo apt-get install -y rpm rpm2cpio cpio alien python3-sphinx python3-sphinx-rtd-theme python3-pip
-          pip3 install sphinx-rtd-theme
+          sudo apt-get install -y rpm rpm2cpio cpio alien python3-pip
           
-          # Convert Debian packages to RPM
-          cd /tmp
-          for pkg in python3-sphinx python3-sphinx-rtd-theme; do
-            pkg_file=$(dpkg -L $pkg | grep '\.deb$' || apt-cache show $pkg | grep Filename | cut -d' ' -f2)
-            if [ -z "$pkg_file" ]; then
-              pkg_file="/var/cache/apt/archives/${pkg}_*.deb"
-            fi
-            sudo alien --to-rpm $pkg_file
-            sudo rpm -ivh --nodeps ${pkg}*.rpm
-          done
+          # Set up EPEL repository
+          sudo rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm || true
+          
+          # Install Python packages from EPEL
+          sudo yum install -y --nogpgcheck python3-sphinx python3-sphinx-rtd-theme || true
+          
+          # Install via pip as fallback
+          pip3 install sphinx sphinx-rtd-theme
           
           # Set up RPM macros for Python dependencies
           echo "%_python_sitelib /usr/lib/python3/dist-packages" | sudo tee -a /usr/lib/rpm/macros
           echo "%python3_sitelib /usr/lib/python3/dist-packages" | sudo tee -a /usr/lib/rpm/macros
           echo "%__python3 /usr/bin/python3" | sudo tee -a /usr/lib/rpm/macros
           echo "%python3_sitearch /usr/lib/python3/dist-packages" | sudo tee -a /usr/lib/rpm/macros
+          
+          # Create build dependency resolution file
+          sudo mkdir -p /etc/rpm
+          echo '%__python3 /usr/bin/python3' | sudo tee /etc/rpm/macros.python3
+          echo '%python3_sitelib /usr/local/lib/python3.*/site-packages/' | sudo tee -a /etc/rpm/macros.python3
+          echo '%python3_sitearch /usr/local/lib/python3.*/site-packages/' | sudo tee -a /etc/rpm/macros.python3
+          echo "%python3_version $(python3 -c "import sys; print('{}.{}'.format(sys.version_info.major, sys.version_info.minor))")" | sudo tee -a /etc/rpm/macros.python3
 
       - name: Create RPM build directories
         run: |
