@@ -74,6 +74,8 @@ jobs:
       - name: Build RPM package
         run: |
           cd ~/rpmbuild/SPECS
+          # Ensure Sphinx is available in the build environment
+          python3 -c "import sphinx; import sphinx_rtd_theme" || exit 1
           rpmbuild --define "_topdir $HOME/rpmbuild" -bb chasm.spec
 
       - name: Test RPM on ${{ matrix.distro }}
