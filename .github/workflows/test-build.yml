@@ -101,6 +101,7 @@ jobs:
                       dnf -y install epel-release
                       dnf -y install python3 python3-pip
                       dnf -y install ansible-core
+                      dnf -y install python3-sphinx python3-sphinx-rtd-theme
                       dnf -y install /rpms/*.rpm
                       chasm version || exit 1
                   '
@@ -121,6 +122,9 @@ jobs:
                       
                       # Install ansible-core via pip
                       pip3 install "ansible-core>=2.9"
+                      
+                      # Install Sphinx dependencies
+                      dnf -y install python3-sphinx python3-sphinx-rtd-theme
                       
                       # Install Chasm RPM without dependency checking
                       rpm -ivh --nodeps /rpms/*.rpm
