@@ -17,6 +17,10 @@ Requires:       python3 >= 3.9
 Requires:       python3-pip
 Requires:       python3-setuptools
 
+# Documentation build requirements
+BuildRequires:  python3-sphinx
+BuildRequires:  python3-sphinx-rtd-theme
+
 # Docker requirements
 Requires:       container-selinux
 Requires:       device-mapper-persistent-data
@@ -42,13 +46,18 @@ The following commands are available:
 
 Note: AWS and Azure CLI tools are optional dependencies. Install them separately if you need cloud provider support.
 
-For detailed documentation, see %{_docdir}/%{name}/vm-management.md
+For detailed documentation, see %{_docdir}/%{name}/vm-management.rst
 
 %prep
 %setup -q -n %{name}-%{version}
 
 %build
 # No build step needed for Ansible playbooks
+
+# Build documentation
+cd docs
+make html
+cd ..
 
 %install
 rm -rf %{buildroot}
@@ -61,12 +70,14 @@ mkdir -p %{buildroot}%{_datadir}/chasm/inventory
 mkdir -p %{buildroot}%{_datadir}/chasm/tools
 mkdir -p %{buildroot}%{_datadir}/chasm/tools/rocky9
 mkdir -p %{buildroot}%{_docdir}/%{name}
+mkdir -p %{buildroot}%{_docdir}/%{name}/html
 
 # Install VERSION file
 install -m 644 VERSION %{buildroot}%{_datadir}/chasm/VERSION
 
 # Install documentation
-install -m 644 docs/vm-management.md %{buildroot}%{_docdir}/%{name}/vm-management.md
+install -m 644 docs/vm-management.rst %{buildroot}%{_docdir}/%{name}/vm-management.rst
+cp -r docs/_build/html/* %{buildroot}%{_docdir}/%{name}/html/
 
 # Install the main chasm script
 install -m 755 tools/chasm %{buildroot}%{_bindir}/chasm
@@ -106,7 +117,8 @@ mkdir -p %{buildroot}%{_datadir}/chasm/inventory/group_vars
 
 %files
 %doc README.md
-%doc %{_docdir}/%{name}/vm-management.md
+%doc %{_docdir}/%{name}/vm-management.rst
+%doc %{_docdir}/%{name}/html/
 %{_datadir}/chasm/
 %{_bindir}/chasm
 %{_libexecdir}/chasm/
