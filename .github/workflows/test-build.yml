@@ -24,10 +24,21 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y rpm rpm2cpio cpio alien python3-sphinx python3-sphinx-rtd-theme python3-pip
           pip3 install sphinx-rtd-theme
+          
+          # Convert Debian packages to RPM
+          cd /tmp
+          for pkg in python3-sphinx python3-sphinx-rtd-theme; do
+            pkg_file=$(dpkg -L $pkg | grep '\.deb$' || apt-cache show $pkg | grep Filename | cut -d' ' -f2)
+            if [ -z "$pkg_file" ]; then
+              pkg_file="/var/cache/apt/archives/${pkg}_*.deb"
+            fi
+            sudo alien --to-rpm $pkg_file
+            sudo rpm -ivh --nodeps ${pkg}*.rpm
+          done
+          
           # Set up RPM macros for Python dependencies
           echo "%_python_sitelib /usr/lib/python3/dist-packages" | sudo tee -a /usr/lib/rpm/macros
           echo "%python3_sitelib /usr/lib/python3/dist-packages" | sudo tee -a /usr/lib/rpm/macros
-          # Create RPM build configuration to recognize system Python packages
           echo "%__python3 /usr/bin/python3" | sudo tee -a /usr/lib/rpm/macros
           echo "%python3_sitearch /usr/lib/python3/dist-packages" | sudo tee -a /usr/lib/rpm/macros
 
