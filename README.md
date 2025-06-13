@@ -17,6 +17,8 @@ Ansible-based deployment system for Rocky Linux 9 and RHEL 9 environments.
 
 Chasm is a deployment automation system that provides a standardized way to deploy and configure systems in both bare metal and cloud environments. It includes preflight checks, system configuration, and deployment capabilities.
 
+For detailed documentation, including installation guides, usage instructions, and API reference, visit our [documentation site](https://ra-rob.github.io/chasm/).
+
 ## Features
 
 - Interactive inventory generation for both bare metal and cloud deployments
