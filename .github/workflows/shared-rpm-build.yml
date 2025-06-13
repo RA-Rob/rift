@@ -23,6 +23,10 @@ jobs:
       rpm_path: ${{ steps.build.outputs.rpm_path }}
     
     steps:
+      - name: Create RPM build directories
+        run: |
+          mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+      
       - name: Checkout code
         uses: actions/checkout@v4
         with:
