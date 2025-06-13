@@ -1,4 +1,4 @@
-# abyss-heartbeat
+# chasm-heartbeat
 
 A simple Bash script and cron job to create a periodic heartbeat copy of abc.pcap as heartbeat.pcap, ensuring atomic delivery to a monitored directory to avoid race conditions.
 
@@ -14,7 +14,7 @@ A simple Bash script and cron job to create a periodic heartbeat copy of abc.pca
 
 ## Overview
 
-The abyss-heartbeat script safely copies the file abc.pcap to a temporary location, then moves it atomically to the destination directory (/data/io-service/input-undersluice-99-default). This prevents race conditions where a processing job might pick up an incomplete copy.
+The chasm-heartbeat script safely copies the file abc.pcap to a temporary location, then moves it atomically to the destination directory (/data/io-service/input-undersluice-99-default). This prevents race conditions where a processing job might pick up an incomplete copy.
 
 ## Prerequisites
 - Linux environment with Bash shell
@@ -25,7 +25,7 @@ The abyss-heartbeat script safely copies the file abc.pcap to a temporary locati
 ## Installation
 
 ### 1. Save the script
-Create the file `/usr/local/bin/abyss-heartbeat` with the following content:
+Create the file `/usr/local/bin/chasm-heartbeat` with the following content:
 
 ```bash
 #!/bin/bash
@@ -46,12 +46,12 @@ cp "$SOURCE_FILE" "$TEMP_FILE"
 mv "$TEMP_FILE" "$DEST_FILE"
 
 # Log the operation (optional)
-echo "$(date) - Moved heartbeat.pcap to $DEST_DIR" >> /var/log/abyss-heartbeat.log
+echo "$(date) - Moved heartbeat.pcap to $DEST_DIR" >> /var/log/chasm-heartbeat.log
 ```
 
 ### 2. Make it executable
 ```bash
-chmod +x /usr/local/bin/abyss-heartbeat
+chmod +x /usr/local/bin/chasm-heartbeat
 ```
 
 ## Configuration
@@ -67,14 +67,14 @@ crontab -e
 
 ### 2. Add the following line to schedule the job every 5 minutes:
 ```
-*/5 * * * * /usr/local/bin/abyss-heartbeat
+*/5 * * * * /usr/local/bin/chasm-heartbeat
 ```
 
 ### 3. Save and exit. The job will now run every 5 minutes.
 
 ## Logging
 
-The script appends a timestamped entry to `/var/log/abyss-heartbeat.log` each time it runs. Adjust the log path or format by editing the final echo command in the script.
+The script appends a timestamped entry to `/var/log/chasm-heartbeat.log` each time it runs. Adjust the log path or format by editing the final echo command in the script.
 
 ## Contributing
 
