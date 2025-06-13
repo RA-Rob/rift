@@ -2,7 +2,7 @@ name: Documentation
 
 on:
   workflow_run:
-    workflows: ["Test Build", "Build RPM"]
+    workflows: ["Test Builds", "Build RPM"]
     types:
       - completed
     branches:

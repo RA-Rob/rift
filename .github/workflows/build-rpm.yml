@@ -27,7 +27,8 @@ jobs:
       - name: Set up RPM build environment
         run: |
           sudo apt-get update
-          sudo apt-get install -y rpm rpm2cpio cpio alien python3-sphinx python3-sphinx-rtd-theme
+          sudo apt-get install -y rpm rpm2cpio cpio alien python3-sphinx python3-sphinx-rtd-theme python3-pip
+          pip3 install sphinx-rtd-theme
 
       - name: Create RPM build directories
         run: |
