@@ -24,6 +24,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y rpm rpm2cpio cpio alien python3-sphinx python3-sphinx-rtd-theme python3-pip
           pip3 install sphinx-rtd-theme
+          # Create symlinks to make Python packages visible to RPM
+          sudo mkdir -p /usr/lib/python3/dist-packages/
+          sudo ln -sf /usr/share/sphinx /usr/lib/python3/dist-packages/
+          sudo ln -sf /usr/lib/python3/dist-packages/sphinx_rtd_theme /usr/lib/python3/dist-packages/
+          # Set up RPM macros for Python dependencies
+          echo "%_python_sitelib /usr/lib/python3/dist-packages" | sudo tee -a /usr/lib/rpm/macros
+          echo "%python3_sitelib /usr/lib/python3/dist-packages" | sudo tee -a /usr/lib/rpm/macros
 
       - name: Create RPM build directories
         run: |
