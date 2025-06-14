@@ -40,10 +40,15 @@ jobs:
           %python3_version_nodots %(python3 -c "import sys; sys.stdout.write('{0}{1}'.format(sys.version_info[0], sys.version_info[1]))")
           EOF
 
-          # Install Python packages via pip
+          # Install Python packages via pip with specific versions
           pip3 install --upgrade pip
-          pip3 install sphinx sphinx-rtd-theme
+          pip3 install sphinx==7.2.6 sphinx-rtd-theme==2.0.0
 
-          # Make pip-installed packages available system-wide
-          sudo mkdir -p /usr/lib/python3/dist-packages/
-          sudo cp -r $(python3 -c "import site; print(site.getsitepackages()[0])")/* /usr/lib/python3/dist-packages/ 
+          # Create a requirements.txt for RPM build
+          cat > ~/rpmbuild/SOURCES/requirements.txt << EOF
+          sphinx==7.2.6
+          sphinx-rtd-theme==2.0.0
+          EOF
+
+          # Set PYTHONPATH to include both system and local packages
+          echo "PYTHONPATH=/usr/lib/python3/dist-packages:$(python3 -c 'import site; print(site.getsitepackages()[0])')" >> $GITHUB_ENV 
