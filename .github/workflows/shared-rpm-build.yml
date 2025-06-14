@@ -41,7 +41,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install sphinx sphinx-rtd-theme
-      
+          
       - name: Update spec file version
         run: |
           # Read and clean version string
@@ -99,8 +99,17 @@ jobs:
         id: build
         run: |
           cd ~/rpmbuild/SPECS
+          
+          # Set up build environment
+          sudo dnf -y install dnf-utils || true
+          sudo dnf config-manager --set-enabled crb || true
+          sudo dnf -y install epel-release || true
+          sudo dnf -y install --nogpgcheck python3-sphinx python3-sphinx-rtd-theme
+          
           # Ensure Sphinx is available in the build environment
           python3 -c "import sphinx; import sphinx_rtd_theme" || exit 1
+          
+          # Build the RPM
           rpmbuild --define "_topdir $HOME/rpmbuild" -bb chasm.spec
           
           # Get tag name or commit hash for artifact naming

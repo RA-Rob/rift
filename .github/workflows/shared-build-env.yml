@@ -42,13 +42,17 @@ jobs:
           gpgcheck=0
           EOF
           
-          # Install Python packages from EPEL
-          sudo dnf install -y --nogpgcheck python3-sphinx python3-sphinx-rtd-theme || true
+          # Enable CRB repository for RHEL/Rocky dependencies
+          sudo dnf -y install dnf-utils || true
+          sudo dnf config-manager --set-enabled crb || true
           
-          # Install via pip as fallback and make it available to RPM
+          # Install Python packages from EPEL
+          sudo dnf install -y --nogpgcheck python3-sphinx python3-sphinx-rtd-theme
+          
+          # Install via pip and make it available to RPM
           pip3 install sphinx sphinx-rtd-theme
-          sudo mkdir -p /usr/local/lib/python3.*/site-packages/
-          sudo cp -r /usr/local/lib/python3.*/site-packages/* /usr/lib/python3/dist-packages/ || true
+          sudo mkdir -p /usr/lib/python3/dist-packages/
+          sudo cp -r $(python3 -c "import site; print(site.getsitepackages()[0])")/* /usr/lib/python3/dist-packages/
           
           # Set up RPM macros for Python dependencies
           sudo mkdir -p /usr/lib/rpm/macros.d
