@@ -31,7 +31,6 @@ jobs:
           sudo apt-get install -y rpm alien build-essential python3-pip python3-sphinx python3-sphinx-rtd-theme
 
           # Create RPM macros file
-          mkdir -p ~/.rpmmacros
           cat > ~/.rpmmacros << 'EOF'
           %_topdir $HOME/rpmbuild
           %__python3 /usr/bin/python3
