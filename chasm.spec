@@ -6,6 +6,7 @@ Summary:        Chasm - Ansible-based Infrastructure Management
 License:        MIT
 URL:            https://github.com/RA-Rob/chasm
 Source0:        %{name}-%{version}.tar.gz
+Source1:        requirements.txt
 BuildArch:      noarch
 
 # Define conditionals
@@ -18,8 +19,8 @@ Requires:       python3-pip
 Requires:       python3-setuptools
 
 # Documentation build requirements
-BuildRequires:  python3-sphinx
-BuildRequires:  python3-sphinx-rtd-theme
+BuildRequires:  python3
+BuildRequires:  python3-pip
 
 # Docker requirements
 Requires:       container-selinux
@@ -52,7 +53,8 @@ For detailed documentation, see %{_docdir}/%{name}/vm-management.rst
 %setup -q -n %{name}-%{version}
 
 %build
-# No build step needed for Ansible playbooks
+# Install Python build dependencies
+pip3 install sphinx sphinx-rtd-theme
 
 # Build documentation
 cd docs
