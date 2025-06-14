@@ -100,11 +100,9 @@ jobs:
         run: |
           cd ~/rpmbuild/SPECS
           
-          # Set up build environment
-          sudo dnf -y install dnf-utils || true
-          sudo dnf config-manager --set-enabled crb || true
-          sudo dnf -y install epel-release || true
-          sudo dnf -y install --nogpgcheck python3-sphinx python3-sphinx-rtd-theme
+          # Install build dependencies
+          sudo apt-get update
+          sudo apt-get install -y rpm alien build-essential python3-pip python3-sphinx python3-sphinx-rtd-theme
           
           # Ensure Sphinx is available in the build environment
           python3 -c "import sphinx; import sphinx_rtd_theme" || exit 1
