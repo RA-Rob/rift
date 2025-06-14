@@ -19,10 +19,19 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: ${{ inputs.distro == 'rocky9' && 'rockylinux:9' || 'redhat/ubi9' }}
     outputs:
       rpm_path: ${{ steps.build.outputs.rpm_path }}
     
     steps:
+      - name: Install build dependencies
+        run: |
+          # Enable EPEL for additional build dependencies
+          dnf install -y epel-release
+          # Install RPM build tools and Python
+          dnf install -y rpm-build python3 python3-pip python3-devel gcc git
+
       - name: Create RPM build directories
         run: |
           mkdir -p ~/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
@@ -31,16 +40,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.9'
           
       - name: Install Python dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install sphinx sphinx-rtd-theme
+          python3 -m pip install --upgrade pip
+          pip3 install sphinx sphinx-rtd-theme
           
       - name: Update spec file version
         run: |
@@ -99,13 +103,6 @@ jobs:
         id: build
         run: |
           cd ~/rpmbuild/SPECS
-          
-          # Install build dependencies
-          sudo apt-get update
-          sudo apt-get install -y rpm alien build-essential python3-pip python3-sphinx python3-sphinx-rtd-theme
-          
-          # Ensure Sphinx is available in the build environment
-          python3 -c "import sphinx; import sphinx_rtd_theme" || exit 1
           
           # Build the RPM
           rpmbuild --define "_topdir $HOME/rpmbuild" -bb chasm.spec

@@ -8,11 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  setup-env:
-    uses: ./.github/workflows/shared-build-env.yml
-
   build-rpm:
-    needs: setup-env
     strategy:
       matrix:
         distro: [rhel9, rocky9]
