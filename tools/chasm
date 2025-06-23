@@ -36,6 +36,7 @@ usage() {
     echo "  preflight    Run preflight checks and setup installation user"
     echo "  deploy       Deploy Chasm to the target environment"
     echo "  test         Run installation verification tests"
+    echo "  dashboard    Manage Grafana dashboards on controller node"
     echo "  version      Show version information"
     echo "  help         Show this help message"
     echo
@@ -52,6 +53,7 @@ usage() {
     echo "  $0 preflight -k ~/.ssh/id_rsa.pub"
     echo "  $0 deploy -t cloud"
     echo "  $0 test"
+    echo "  $0 dashboard add -d my-dashboard.json"
     echo "  $0 version"
 }
 
@@ -123,6 +125,7 @@ source "$CMD_DIR/generate.sh"
 source "$CMD_DIR/verify.sh"
 source "$CMD_DIR/preflight.sh"
 source "$CMD_DIR/deploy.sh"
+source "$CMD_DIR/dashboard.sh"
 
 # Execute commands
 case "$COMMAND" in
@@ -140,6 +143,9 @@ case "$COMMAND" in
         ;;
     test)
         run_tests
+        ;;
+    dashboard)
+        handle_dashboard_command "$@"
         ;;
     version)
         show_version

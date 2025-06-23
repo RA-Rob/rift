@@ -28,6 +28,7 @@ For detailed documentation, including installation guides, usage instructions, a
 - Preflight checks for system requirements and SSH access
 - Automated deployment of Ansible playbooks
 - Support for both bare metal and cloud environments
+- Grafana dashboard management and deployment
 - Modular command structure for easy maintenance and extension
 
 ## Project Structure
@@ -41,12 +42,14 @@ For detailed documentation, including installation guides, usage instructions, a
 │       ├── generate.sh    # Inventory generation
 │       ├── verify.sh      # Inventory verification
 │       ├── preflight.sh   # Preflight checks
-│       └── deploy.sh      # Deployment execution
+│       ├── deploy.sh      # Deployment execution
+│       └── dashboard.sh   # Dashboard management
 ├── inventory/             # Ansible inventory files
 ├── playbooks/            # Ansible playbooks
 ├── roles/                # Ansible roles
 ├── group_vars/           # Group variables
 ├── host_vars/            # Host variables
+├── dashboards/           # Grafana dashboard definitions
 ├── ansible.cfg           # Ansible configuration
 └── site.yml             # Main playbook
 ```
@@ -103,6 +106,20 @@ Deploy Chasm to the target environment:
 ./tools/chasm deploy
 ```
 
+### Manage Dashboards
+
+Add Grafana dashboards to the controller node:
+```bash
+# Add a specific dashboard
+./tools/chasm dashboard add -d dashboards/sample-dashboard.json
+
+# List existing dashboards
+./tools/chasm dashboard list
+
+# Validate a dashboard file
+./tools/chasm dashboard validate -d dashboards/my-dashboard.json
+```
+
 ### Version Information
 
 Display the current version:
@@ -152,6 +169,30 @@ Display the current version:
 
 - `chasm.worker.controller_host`: Controller host address
 - `chasm.worker.controller_port`: Controller port
+
+## Dashboards
+
+The `dashboards/` directory contains Grafana dashboard definitions in JSON format. These dashboards can be deployed to Grafana instances running on controller nodes using the `chasm dashboard` command.
+
+### Dashboard Organization
+
+- Place all dashboard JSON files in the `dashboards/` directory
+- Dashboard files are automatically included in RPM packages
+- Use descriptive names (e.g., `system-monitoring.json`, `application-metrics.json`)
+- Sample dashboard provided: `dashboards/sample-dashboard.json`
+
+### Managing Dashboards
+
+```bash
+# Add a dashboard to Grafana
+chasm dashboard add -d dashboards/my-dashboard.json
+
+# List all dashboards in Grafana
+chasm dashboard list
+
+# Validate a dashboard before deployment
+chasm dashboard validate -d dashboards/my-dashboard.json
+```
 
 ## Security
 

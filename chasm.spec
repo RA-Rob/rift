@@ -79,6 +79,7 @@ install -m 644 VERSION %{buildroot}%{_datadir}/chasm/VERSION
 
 # Install documentation
 install -m 644 docs/vm-management.rst %{buildroot}%{_docdir}/%{name}/vm-management.rst
+install -m 644 docs/dashboard-management.md %{buildroot}%{_docdir}/%{name}/dashboard-management.md
 cp -r docs/_build/html/* %{buildroot}%{_docdir}/%{name}/html/
 
 # Install the main chasm script
@@ -117,9 +118,17 @@ EOF
 mkdir -p %{buildroot}%{_datadir}/chasm/inventory/host_vars
 mkdir -p %{buildroot}%{_datadir}/chasm/inventory/group_vars
 
+# Create dashboards directory and install dashboard files
+mkdir -p %{buildroot}%{_datadir}/chasm/dashboards
+# Install all JSON files from dashboards directory
+if ls dashboards/*.json >/dev/null 2>&1; then
+    cp dashboards/*.json %{buildroot}%{_datadir}/chasm/dashboards/
+fi
+
 %files
 %doc README.md
 %doc %{_docdir}/%{name}/vm-management.rst
+%doc %{_docdir}/%{name}/dashboard-management.md
 %doc %{_docdir}/%{name}/html/
 %{_datadir}/chasm/
 %{_bindir}/chasm
