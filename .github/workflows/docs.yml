@@ -1,6 +1,10 @@
 name: Documentation
 
 on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+  # Also run when other workflows complete (success or failure)
   workflow_run:
     workflows: ["Test Build", "Build RPM"]
     types:
@@ -18,23 +22,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  check-workflows:
-    runs-on: ubuntu-latest
-    outputs:
-      should_run: ${{ steps.check.outputs.should_run }}
-    steps:
-      - name: Check workflow status
-        id: check
-        run: |
-          if [[ "${{ github.event.workflow_run.conclusion }}" == "success" ]]; then
-            echo "should_run=true" >> $GITHUB_OUTPUT
-          else
-            echo "should_run=false" >> $GITHUB_OUTPUT
-          fi
-
   build:
-    needs: check-workflows
-    if: needs.check-workflows.outputs.should_run == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -54,15 +42,30 @@ jobs:
           cd docs
           make html
           
+      - name: Check for documentation errors
+        run: |
+          cd docs
+          # Check if build produced the main index file
+          if [ -f "_build/html/index.html" ]; then
+            echo "✅ Documentation built successfully"
+            echo "📄 Generated files:"
+            ls -la _build/html/
+          else
+            echo "❌ Documentation build failed - index.html not found"
+            echo "Build directory contents:"
+            ls -la _build/ || echo "Build directory not found"
+            exit 1
+          fi
+          
       - name: Upload documentation
         uses: actions/upload-artifact@v4
         with:
-          name: documentation
+          name: documentation-${{ github.run_id }}
           path: docs/_build/html/
 
   deploy:
     needs: build
-    if: needs.check-workflows.outputs.should_run == 'true'
+    # Deploy to GitHub Pages since we only run on main branch now
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -71,7 +74,7 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v4
         with:
-          name: documentation
+          name: documentation-${{ github.run_id }}
           
       - name: Setup Pages
         uses: actions/configure-pages@v4

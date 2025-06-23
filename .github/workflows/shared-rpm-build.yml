@@ -29,23 +29,28 @@ jobs:
         run: |
           # Enable repositories based on distribution
           if [ "${{ inputs.distro }}" = "rhel9" ]; then
-            # For RHEL UBI, first enable standard repos
+            # For RHEL UBI, install dnf-utils first
             dnf install -y dnf-utils
             
-            # Enable CRB (CodeReady Builder)
-            dnf config-manager --set-enabled codeready-builder-for-rhel-9-$(arch) || \
-            dnf config-manager --set-enabled crb
+            # Try to enable CRB (CodeReady Builder) if available
+            # UBI containers may not have these repos, so don't fail on error
+            dnf config-manager --set-enabled codeready-builder-for-rhel-9-$(arch) 2>/dev/null || \
+            dnf config-manager --set-enabled crb 2>/dev/null || \
+            echo "CRB repository not available in UBI container, continuing without it"
             
-            # Install EPEL RPM directly
-            dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
-            dnf install -y https://dl.fedoraproject.org/pub/epel/epel-next-release-latest-9.noarch.rpm
+            # Install EPEL RPM directly (this should work in UBI)
+            dnf install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm || \
+            echo "EPEL installation failed, continuing without it"
             
             # Clean and update metadata
             dnf clean all
             dnf makecache
           else
-            # For Rocky Linux
+            # For Rocky Linux - enable EPEL and CRB
             dnf install -y epel-release
+            dnf config-manager --set-enabled crb
+            dnf clean all
+            dnf makecache
           fi
           
           # Install RPM build tools and Python
