@@ -1,2 +1,59 @@
 # Variables applied to all hosts
 ansible_user: your-ssh-user
+ansible_python_interpreter: /usr/bin/python3
+
+# Installation user configuration
+install_user: chasmuser
+install_group: chasmuser
+install_uid: 1000
+install_gid: 1000
+
+# System configuration
+system_timezone: UTC
+
+# Common packages to install on all hosts
+common_packages:
+  - vim
+  - curl
+  - wget
+  - git
+  - htop
+  - tree
+  - rsync
+  - unzip
+  - tar
+  - which
+  - bind-utils
+  - net-tools
+
+# Controller-specific packages (used by preflight playbook)
+controller_packages:
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+  - docker-buildx-plugin
+  - docker-compose-plugin
+
+# Chasm configuration
+chasm:
+  version: "{{ lookup('file', '../VERSION') | trim }}"
+  data_dir: /opt/chasm
+  log_dir: /var/log/chasm
+  config_dir: /etc/chasm
+  
+  # Controller configuration
+  controller:
+    api_port: 8080
+    metrics_port: 9090
+    
+  # Worker configuration  
+  worker:
+    controller_host: "{{ hostvars[groups['controller'][0]]['ansible_host'] }}"
+    controller_port: 8080
+
+# Network configuration
+network:
+  domain: local
+  dns_servers:
+    - 8.8.8.8
+    - 8.8.4.4

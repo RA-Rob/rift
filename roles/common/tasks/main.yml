@@ -1,4 +1,46 @@
 ---
-# Placeholder for any common tasks you might add later
-- debug:
-    msg: "Common role applied to {{ inventory_hostname }}"
+# Common role tasks applied to all hosts
+- name: Apply common configuration to {{ inventory_hostname }}
+  debug:
+    msg: "Applying common configuration to {{ inventory_hostname }}"
+
+- name: Update package cache
+  dnf:
+    update_cache: yes
+  when: ansible_os_family == "RedHat"
+  tags:
+    - packages
+    - system
+
+- name: Install common system packages
+  dnf:
+    name: "{{ common_packages | default(['vim', 'curl', 'wget', 'git', 'htop', 'tree']) }}"
+    state: present
+  when: ansible_os_family == "RedHat"
+  tags:
+    - packages
+    - system
+
+- name: Ensure SELinux is in enforcing mode
+  selinux:
+    policy: targeted
+    state: enforcing
+  when: ansible_os_family == "RedHat"
+  tags:
+    - security
+    - selinux
+
+- name: Configure timezone
+  timezone:
+    name: "{{ system_timezone | default('UTC') }}"
+  tags:
+    - system
+    - timezone
+
+- name: Set hostname if specified
+  hostname:
+    name: "{{ inventory_hostname }}"
+  when: inventory_hostname != ansible_hostname
+  tags:
+    - system
+    - hostname

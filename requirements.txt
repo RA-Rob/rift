@@ -1,0 +1,5 @@
+ansible-core>=2.9
+molecule>=3.0
+molecule-podman>=1.0
+sphinx>=3.0
+sphinx-rtd-theme>=0.5 
