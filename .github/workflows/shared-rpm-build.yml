@@ -68,7 +68,8 @@ jobs:
       - name: Install Python dependencies
         run: |
           python3 -m pip install --upgrade pip
-          pip3 install sphinx sphinx-rtd-theme
+          # Use --ignore-installed to avoid conflicts with system RPM packages
+          pip3 install --ignore-installed sphinx sphinx-rtd-theme
           
       - name: Update spec file version
         run: |
