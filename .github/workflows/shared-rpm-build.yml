@@ -132,11 +132,13 @@ jobs:
           # Build the RPM
           rpmbuild --define "_topdir $HOME/rpmbuild" -bb chasm.spec
           
-          # Get tag name or commit hash for artifact naming
+          # Get tag name or commit hash for artifact naming using GitHub context
           if [[ "${{ github.ref }}" == refs/tags/* ]]; then
             TAG_NAME=$(echo "${{ github.ref }}" | sed 's|refs/tags/||')
           else
-            TAG_NAME=$(git rev-parse --short HEAD)
+            # Use GitHub SHA instead of git command
+            TAG_NAME="${{ github.sha }}"
+            TAG_NAME="${TAG_NAME:0:7}"  # Get first 7 characters like git rev-parse --short
           fi
           
           # Copy RPM to a directory with clear naming
