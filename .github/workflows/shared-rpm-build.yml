@@ -152,4 +152,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: rpm-${{ inputs.distro }}
-          path: ${{ env.HOME }}/release-rpms/*.rpm 
+          path: ~/release-rpms/*.rpm 
