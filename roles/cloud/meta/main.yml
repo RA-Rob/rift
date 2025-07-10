@@ -1,9 +1,9 @@
 ---
 galaxy_info:
   role_name: cloud
-  author: Chasm Team
+  author: Rift Team
   description: Cloud infrastructure setup and configuration role
-  company: Chasm
+  company: Rift
   license: MIT
   min_ansible_version: 2.9
   platforms:

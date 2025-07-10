@@ -1,37 +1,37 @@
 ---
-- name: Verify Chasm Installation
+- name: Verify Rift Installation
   hosts: localhost
   gather_facts: true
   tasks:
-    - name: Check chasm command exists
-      command: which chasm
-      register: chasm_path
+    - name: Check rift command exists
+  command: which rift
+  register: rift_path
       changed_when: false
       failed_when: false
 
-    - name: Display chasm path
-      debug:
-        msg: "Chasm installed at: {{ chasm_path.stdout }}"
+    - name: Display rift path
+  debug:
+    msg: "Rift installed at: {{ rift_path.stdout }}"
 
-    - name: Get chasm version
-      command: chasm version
-      register: chasm_version
+    - name: Get rift version
+  command: rift version
+  register: rift_version
       changed_when: false
 
-    - name: Display chasm version
-      debug:
-        msg: "{{ chasm_version.stdout_lines }}"
+    - name: Display rift version
+  debug:
+    msg: "{{ rift_version.stdout_lines }}"
 
     - name: Verify required directories
       stat:
         path: "{{ item }}"
       register: dir_check
       loop:
-        - /usr/share/chasm
-        - /usr/share/chasm/playbooks
-        - /usr/share/chasm/roles
-        - /usr/share/chasm/inventory
-        - /usr/share/chasm/tools
+        - /usr/share/rift
+        - /usr/share/rift/playbooks
+        - /usr/share/rift/roles
+        - /usr/share/rift/inventory
+        - /usr/share/rift/tools
 
     - name: Display directory check results
       debug:
@@ -40,7 +40,7 @@
 
     - name: List installed roles
       find:
-        paths: /usr/share/chasm/roles
+        paths: /usr/share/rift/roles
         patterns: "*.yml"
       register: roles_list
 
@@ -50,7 +50,7 @@
 
     - name: Verify ansible.cfg
       stat:
-        path: /usr/share/chasm/ansible.cfg
+        path: /usr/share/rift/ansible.cfg
       register: ansible_cfg
 
     - name: Display ansible.cfg status

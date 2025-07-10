@@ -1,7 +1,7 @@
 VM Management
 ============
 
-This section describes the VM management commands available in Chasm. These commands provide a unified interface for managing virtual machines across multiple platforms including KVM, AWS, and Azure.
+This section describes the VM management commands available in Rift. These commands provide a unified interface for managing virtual machines across multiple platforms including KVM, AWS, and Azure.
 
 Available Commands
 ----------------
@@ -13,7 +13,7 @@ Creates virtual machines on the specified platform.
 
 .. code-block:: bash
 
-   chasm vm-create [OPTIONS] <platform>
+   rift vm-create [OPTIONS] <platform>
 
 Options
 ^^^^^^^
@@ -35,13 +35,13 @@ Examples
 .. code-block:: bash
 
    # Create VMs on AWS
-   chasm vm-create aws
+   rift vm-create aws
 
    # Force recreate KVM VMs
-   chasm vm-create --force kvm
+   rift vm-create --force kvm
 
    # Create Azure VMs with custom config
-   chasm vm-create -c my-config.conf azure
+   rift vm-create -c my-config.conf azure
 
 vm-cleanup
 ~~~~~~~~~
@@ -50,7 +50,7 @@ Cleans up VMs and associated resources on the specified platform.
 
 .. code-block:: bash
 
-   chasm vm-cleanup [OPTIONS] <platform>
+   rift vm-cleanup [OPTIONS] <platform>
 
 Options
 ^^^^^^^
@@ -72,13 +72,13 @@ Examples
 .. code-block:: bash
 
    # Clean up AWS resources
-   chasm vm-cleanup aws
+   rift vm-cleanup aws
 
    # Force cleanup Azure resources
-   chasm vm-cleanup --force azure
+   rift vm-cleanup --force azure
 
    # Clean up KVM VMs with custom config
-   chasm vm-cleanup -c my-config.conf kvm
+   rift vm-cleanup -c my-config.conf kvm
 
 vm-test
 ~~~~~~~
@@ -87,7 +87,7 @@ Tests VM connectivity and configuration.
 
 .. code-block:: bash
 
-   chasm vm-test [OPTIONS]
+   rift vm-test [OPTIONS]
 
 Options
 ^^^^^^^
@@ -101,10 +101,10 @@ Examples
 .. code-block:: bash
 
    # Run basic tests
-   chasm vm-test
+   rift vm-test
 
    # Run tests with detailed output
-   chasm vm-test --verbose
+   rift vm-test --verbose
 
 Configuration Files
 -----------------

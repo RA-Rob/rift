@@ -1,7 +1,7 @@
 ---
 # Preflight Playbook
 #
-# This playbook performs initial system setup and verification for Chasm deployment.
+# This playbook performs initial system setup and verification for Rift deployment.
 # It handles the following tasks:
 #
 # 1. System Updates
@@ -223,9 +223,9 @@
     - name: Add public key
       lineinfile:
         path: "~/.ssh/authorized_keys"
-        line: "{{ chasm_ssh_public_key }}"
+        line: "{{ rift_ssh_public_key }}"
         state: present
-      when: chasm_ssh_public_key != ""
+      when: rift_ssh_public_key != ""
 
     - name: Set SSH directory permissions
       file:

@@ -1,13 +1,13 @@
-# Chasm Command-Line Tool
+# Rift Command-Line Tool
 
-The Chasm command-line tool provides a unified interface for managing Ansible deployments. It simplifies common tasks like inventory management, preflight checks, and deployment execution.
+The Rift command-line tool provides a unified interface for managing Ansible deployments. It simplifies common tasks like inventory management, preflight checks, and deployment execution.
 
 ## Overview
 
 The tool is organized into a modular structure:
 ```
 tools/
-├── chasm              # Main deployment script
+├── rift               # Main deployment script
 └── commands/          # Command-specific scripts
     ├── common.sh      # Shared utility functions
     ├── generate.sh    # Inventory generation
@@ -22,7 +22,7 @@ tools/
 Interactive inventory file generation for both bare metal and cloud deployments.
 
 ```bash
-./chasm generate
+./rift generate
 ```
 
 Features:
@@ -35,7 +35,7 @@ Features:
 Validates inventory structure and deployment type.
 
 ```bash
-./chasm verify
+./rift verify
 ```
 
 Checks:
@@ -48,7 +48,7 @@ Checks:
 Performs system checks and prepares the installation environment.
 
 ```bash
-./chasm preflight -k ~/.ssh/id_rsa.pub
+./rift preflight -k ~/.ssh/id_rsa.pub
 ```
 
 Tasks:
@@ -61,7 +61,7 @@ Tasks:
 Executes the main deployment playbook.
 
 ```bash
-./chasm deploy
+./rift deploy
 ```
 
 Process:
@@ -76,21 +76,21 @@ All commands support the following options:
 
 - `-t, --type`: Deployment type (baremetal|cloud)
   - Default: baremetal
-  - Example: `./chasm deploy -t cloud`
+  - Example: `./rift deploy -t cloud`
 
 - `-i, --inventory`: Custom inventory file
   - Default: inventory/inventory.ini
-  - Example: `./chasm verify -i custom/inventory.ini`
+  - Example: `./rift verify -i custom/inventory.ini`
 
 - `-v, --verbose`: Enable verbose output
-  - Example: `./chasm deploy -v`
+  - Example: `./rift deploy -v`
 
 - `-k, --key`: SSH public key file
   - Required for preflight
-  - Example: `./chasm preflight -k ~/.ssh/id_rsa.pub`
+  - Example: `./rift preflight -k ~/.ssh/id_rsa.pub`
 
 - `-h, --help`: Show help message
-  - Example: `./chasm --help`
+  - Example: `./rift --help`
 
 ## Extending the Tool
 
@@ -106,7 +106,7 @@ All commands support the following options:
    }
    ```
 
-2. Update `chasm` to include your command:
+2. Update `rift` to include your command:
    ```bash
    source "$SCRIPT_DIR/commands/your_command.sh"
    

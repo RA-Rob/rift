@@ -1,5 +1,5 @@
 ---
-# Chasm deployment playbook
+# Rift deployment playbook
 - name: Configure base system
   hosts: all
   become: true

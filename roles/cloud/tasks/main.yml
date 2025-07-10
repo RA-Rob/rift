@@ -17,5 +17,5 @@
     state: directory
     mode: '0755'
   loop:
-    - /etc/chasm/cloud
-    - /etc/chasm/cloud/credentials 
+      - /etc/rift/cloud
+  - /etc/rift/cloud/credentials 

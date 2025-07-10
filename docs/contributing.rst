@@ -1,7 +1,7 @@
-Contributing to Chasm
-===================
+Contributing to Rift
+==================
 
-We love your input! We want to make contributing to Chasm as easy and transparent as possible, whether it's:
+We love your input! We want to make contributing to Rift as easy and transparent as possible, whether it's:
 
 * Reporting a bug
 * Discussing the current state of the code
@@ -33,10 +33,10 @@ Any contributions you make will be under the MIT Software License
 
 In short, when you submit code changes, your submissions are understood to be under the same [MIT License](http://choosealicense.com/licenses/mit/) that covers the project. Feel free to contact the maintainers if that's a concern.
 
-Report bugs using GitHub's [issue tracker](https://github.com/your-org/chasm/issues)
+Report bugs using GitHub's [issue tracker](https://github.com/your-org/rift/issues)
 --------------------------------------------------------------------------------
 
-We use GitHub issues to track public bugs. Report a bug by [opening a new issue](https://github.com/your-org/chasm/issues/new); it's that easy!
+We use GitHub issues to track public bugs. Report a bug by [opening a new issue](https://github.com/your-org/rift/issues/new); it's that easy!
 
 Write bug reports with detail, background, and sample code
 ------------------------------------------------------

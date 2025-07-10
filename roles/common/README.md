@@ -1,6 +1,6 @@
 # Common Role
 
-This role provides common system configuration and setup for all hosts in the Chasm deployment.
+This role provides common system configuration and setup for all hosts in the Rift deployment.
 
 ## Description
 
