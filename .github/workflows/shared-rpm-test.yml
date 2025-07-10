@@ -48,8 +48,15 @@ jobs:
             dnf makecache
           fi
           
-          # Install base dependencies
-          dnf -y install python3 python3-pip
+          # Install base dependencies and RPM dependencies
+          dnf -y install python3 python3-pip \
+            ansible-core \
+            container-selinux \
+            device-mapper-persistent-data \
+            libvirt-client \
+            lvm2 \
+            qemu-kvm \
+            virt-install
 
       - name: Install and test RPM
         run: |
