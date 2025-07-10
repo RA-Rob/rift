@@ -3,10 +3,6 @@ name: Shared RPM Test
 on:
   workflow_call:
     inputs:
-      rpm_path:
-        description: "Path to the RPM to test"
-        required: true
-        type: string
       distro:
         description: "Distribution to test on (rhel9, rocky9)"
         required: true
@@ -18,6 +14,12 @@ jobs:
     container:
       image: ${{ inputs.distro == 'rocky9' && 'rockylinux:9' || 'redhat/ubi9' }}
     steps:
+      - name: Download RPM artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: rpm-${{ inputs.distro }}
+          path: ~/rpms
+
       - name: Install dependencies
         run: |
           # Enable required repositories
@@ -51,8 +53,15 @@ jobs:
 
       - name: Install and test RPM
         run: |
-          # Install the RPM
-          rpm -ivh "${{ inputs.rpm_path }}"
+          # Find and install the RPM
+          RPM_FILE=$(find ~/rpms -name "*.rpm" -type f | head -1)
+          if [ -z "$RPM_FILE" ]; then
+            echo "No RPM file found in artifacts!"
+            exit 1
+          fi
+          
+          echo "Installing RPM: $RPM_FILE"
+          rpm -ivh "$RPM_FILE"
           
           # Test rift command
           rift version || exit 1 

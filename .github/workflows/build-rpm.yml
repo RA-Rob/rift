@@ -50,7 +50,6 @@ jobs:
         distro: [rhel9, rocky9]
     uses: ./.github/workflows/shared-rpm-test.yml
     with:
-      rpm_path: ${{ needs.build-rpm.outputs.rpm_path }}
       distro: ${{ matrix.distro }}
 
   create-release:
@@ -66,7 +65,7 @@ jobs:
       - name: Download all tested RPMs
         uses: actions/download-artifact@v4
         with:
-          pattern: tested-rpm-*
+          pattern: rpm-*
           path: release-rpms
           merge-multiple: true
 

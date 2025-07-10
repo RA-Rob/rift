@@ -126,7 +126,11 @@ jobs:
           rpmbuild --define "_topdir $HOME/rpmbuild" -bb rift.spec
 
       - name: Find and copy RPM
+        id: build
         run: |
+          # Read version for naming
+          VERSION=$(cat VERSION | tr -d '[:space:]')
+          
           # Find the built RPM
           RPM_FILE=$(find ~/rpmbuild/RPMS -name "*.rpm" -type f | head -1)
           if [ -z "$RPM_FILE" ]; then
@@ -136,8 +140,16 @@ jobs:
           
           # Create release directory and copy RPM with appropriate naming
           mkdir -p ~/release-rpms
-          RPM_PATH=~/release-rpms/rift-${TAG_NAME}-${{ inputs.distro }}.rpm
-          cp ~/rpmbuild/RPMS/noarch/*.rpm $RPM_PATH
+          RPM_NAME="rift-${VERSION}-${{ inputs.distro }}.rpm"
+          RPM_PATH="~/release-rpms/${RPM_NAME}"
+          cp "$RPM_FILE" "$RPM_PATH"
           
-          # Set output
-          echo "rpm_path=$RPM_PATH" >> $GITHUB_OUTPUT 
+          # Set outputs
+          echo "rpm_path=$RPM_PATH" >> $GITHUB_OUTPUT
+          echo "rpm_name=$RPM_NAME" >> $GITHUB_OUTPUT
+
+      - name: Upload RPM artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpm-${{ inputs.distro }}
+          path: ~/release-rpms/*.rpm 
