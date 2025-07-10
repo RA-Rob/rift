@@ -1,0 +1,34 @@
+# KVM/libvirt settings
+libvirt_pool_dir: "/media/ubuntu/store/VMs"
+libvirt_pool_name: "default"
+
+# Default user settings
+default_user:
+  username: "rocky"
+  password: "rocky123"  # This will be hashed during installation
+  ssh_key: "{{ lookup('file', '~/.ssh/id_rsa.pub', errors='ignore') | default('') }}"
+
+# Rocky 9 VM settings
+rocky9_vm_template:
+  name: "rocky9-template"
+  vcpus: 2
+  memory_mb: 4096
+  disk_size_gb: 20
+  os_variant: "rocky9.0"
+  network: "default"  # Using default libvirt network for local networking
+  base_image_path: "/media/ubuntu/store/VMs/rocky9-cloud-base.qcow2"
+
+# VM instances to create
+rocky9_vms:
+  - name: "controller"
+    vcpus: 2
+    memory_mb: 4096
+    disk_size_gb: 20
+  - name: "worker1"
+    vcpus: 2
+    memory_mb: 4096
+    disk_size_gb: 20
+  - name: "worker2"
+    vcpus: 2
+    memory_mb: 4096
+    disk_size_gb: 20 
