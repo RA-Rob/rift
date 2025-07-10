@@ -18,7 +18,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: rpm-${{ inputs.distro }}
-          path: ~/rpms
+          path: ${{ env.HOME }}/rpms
 
       - name: Install dependencies
         run: |
@@ -54,7 +54,7 @@ jobs:
       - name: Install and test RPM
         run: |
           # Find and install the RPM
-          RPM_FILE=$(find ~/rpms -name "*.rpm" -type f | head -1)
+          RPM_FILE=$(find "${HOME}/rpms" -name "*.rpm" -type f | head -1)
           if [ -z "$RPM_FILE" ]; then
             echo "No RPM file found in artifacts!"
             exit 1
