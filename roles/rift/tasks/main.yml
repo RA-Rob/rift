@@ -1,18 +1,18 @@
 ---
-# Chasm role tasks
-# This role handles core Chasm functionality and setup
+# Rift role tasks
+# This role handles core Rift functionality and setup
 
-- name: Create Chasm configuration directories
+- name: Create Rift configuration directories
   file:
     path: "{{ item }}"
     state: directory
     mode: '0755'
   loop:
-    - /etc/chasm
-    - /etc/chasm/config
-    - /var/log/chasm
+    - /etc/rift
+    - /etc/rift/config
+    - /var/log/rift
 
-- name: Install Chasm dependencies
+- name: Install Rift dependencies
   dnf:
     name:
       - python3-pip
@@ -30,9 +30,9 @@
     state: present
     executable: pip3
 
-- name: Ensure Chasm service is enabled
+- name: Ensure Rift service is enabled
   systemd:
-    name: chasm
+    name: rift
     enabled: yes
     state: started
   when: ansible_service_mgr == 'systemd' 

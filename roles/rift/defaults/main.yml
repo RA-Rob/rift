@@ -1,0 +1,16 @@
+---
+# Rift role defaults
+
+# Configuration paths
+rift_config_dir: "/etc/rift"
+rift_log_dir: "/var/log/rift"
+
+# Service configuration
+rift_service_name: "rift"
+rift_service_state: "started"
+rift_service_enabled: true
+
+# Python package versions
+ansible_core_version: ">=2.9"
+molecule_version: "latest"
+molecule_podman_version: "latest" 

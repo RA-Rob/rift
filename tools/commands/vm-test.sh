@@ -1,50 +1,74 @@
 #!/bin/bash
 
-# Source common functions
-source "$(dirname "$0")/common.sh"
+# VM Test command for Rift
 
-usage() {
-    echo "Usage: chasm vm-test [OPTIONS]"
-    echo
-    echo "Test VM connectivity and configuration"
-    echo
-    echo "Options:"
-    echo "  -h, --help     Show this help message"
-    echo "  -v, --verbose  Show detailed test output"
-    exit 1
+show_usage() {
+    cat << EOF
+Usage: rift vm-test [OPTIONS]
+
+Test VM connectivity and configuration.
+
+OPTIONS:
+    -h, --help     Show this help message
+    -v, --verbose  Enable verbose output
+    -i, --inventory  Inventory file to use for testing (default: inventory/inventory.ini)
+    -t, --timeout    Connection timeout in seconds (default: 30)
+
+EXAMPLES:
+    rift vm-test
+    rift vm-test --verbose
+    rift vm-test -i custom_inventory.ini
+
+EOF
 }
 
 # Parse command line arguments
-VERBOSE=false
+INVENTORY="inventory/inventory.ini"
+TIMEOUT=30
+VERBOSE=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
         -h|--help)
-            usage
+            show_usage
+            exit 0
             ;;
         -v|--verbose)
-            VERBOSE=true
+            VERBOSE="true"
             shift
             ;;
+        -i|--inventory)
+            INVENTORY="$2"
+            shift 2
+            ;;
+        -t|--timeout)
+            TIMEOUT="$2"
+            shift 2
+            ;;
         *)
-            echo "Error: Unknown option $1"
-            usage
+            echo "Error: Unknown argument: $1"
+            show_usage
+            exit 1
             ;;
     esac
 done
 
-# Set paths
-ROCKY9_TOOLS_DIR="$CHASM_DATA_DIR/tools/rocky9"
-COMMON_SCRIPT="$ROCKY9_TOOLS_DIR/common.sh"
+# Set data directory
+RIFT_DATA_DIR="${RIFT_DATA_DIR:-/usr/share/rift}"
+ROCKY9_TOOLS_DIR="$RIFT_DATA_DIR/tools/rocky9"
 
-# Source Rocky9 common functions if they exist
-if [[ -f "$COMMON_SCRIPT" ]]; then
-    source "$COMMON_SCRIPT"
+# Check if Rocky9 tools are available
+if [ ! -d "$ROCKY9_TOOLS_DIR" ]; then
+    echo "Error: Rocky9 tools not found at $ROCKY9_TOOLS_DIR"
+    echo "Please ensure Rift is properly installed with Rocky9 tools."
+    exit 1
 fi
 
-# Execute the test script
-if [[ "$VERBOSE" == "true" ]]; then
-    "$ROCKY9_TOOLS_DIR/test_lab.sh" --verbose
-else
-    "$ROCKY9_TOOLS_DIR/test_lab.sh"
-fi 
+# Check if inventory file exists
+if [ ! -f "$INVENTORY" ]; then
+    echo "Error: Inventory file not found: $INVENTORY"
+    exit 1
+fi
+
+# Execute test script
+"$ROCKY9_TOOLS_DIR/test_lab.sh" -i "$INVENTORY" -t "$TIMEOUT" ${VERBOSE:+-v} 

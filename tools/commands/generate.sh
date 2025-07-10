@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Generate command for Chasm
+# Generate command for Rift
 
 # Source common functions
-if [ -f "/usr/libexec/chasm/commands/common.sh" ]; then
-    source "/usr/libexec/chasm/commands/common.sh"
+if [ -f "/usr/libexec/rift/commands/common.sh" ]; then
+    source "/usr/libexec/rift/commands/common.sh"
 else
     source "$(dirname "$0")/common.sh"
 fi
@@ -30,7 +30,7 @@ generate_inventory() {
     
     # Start building inventory file
     {
-        echo "# Generated inventory file for Chasm deployment"
+        echo "# Generated inventory file for Rift deployment"
         echo "# Deployment Type: $deployment_type"
         echo
         echo "[controller]"
@@ -75,7 +75,7 @@ generate_inventory() {
         fi
         
         echo
-        echo "[chasm_servers:children]"
+        echo "[rift_servers:children]"
         echo "controller"
         echo "workers"
         echo

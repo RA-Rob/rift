@@ -1,85 +1,107 @@
 #!/bin/bash
 
-# Source common functions
-source "$(dirname "$0")/common.sh"
+# VM Create command for Rift
 
-usage() {
-    echo "Usage: chasm vm-create [OPTIONS] <platform>"
-    echo
-    echo "Create VMs on the specified platform"
-    echo
-    echo "Platforms:"
-    echo "  kvm     Create VMs using local KVM/libvirt"
-    echo "  aws     Create VMs on AWS"
-    echo "  azure   Create VMs on Azure"
-    echo
-    echo "Options:"
-    echo "  -h, --help     Show this help message"
-    echo "  -f, --force    Force recreation of VMs if they exist"
-    echo "  -c, --config   Path to custom configuration file"
-    exit 1
+show_usage() {
+    cat << EOF
+Usage: rift vm-create [OPTIONS] <platform>
+
+Create VMs on the specified platform.
+
+PLATFORMS:
+    kvm       Create VMs on KVM host
+    aws       Create VMs on AWS
+    azure     Create VMs on Azure
+
+OPTIONS:
+    -h, --help     Show this help message
+    -v, --verbose  Enable verbose output
+    -n, --count    Number of VMs to create (default: 1)
+    -s, --size     VM size/type (default: standard)
+    -r, --region   Region for cloud platforms (default: us-east-1)
+
+EXAMPLES:
+    rift vm-create kvm
+    rift vm-create aws -n 3 -s t3.medium
+    rift vm-create azure -r eastus
+
+EOF
 }
 
 # Parse command line arguments
-FORCE=false
-CONFIG=""
+PLATFORM=""
+VM_COUNT=1
+VM_SIZE="standard"
+REGION="us-east-1"
+VERBOSE=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
         -h|--help)
-            usage
+            show_usage
+            exit 0
             ;;
-        -f|--force)
-            FORCE=true
+        -v|--verbose)
+            VERBOSE="true"
             shift
             ;;
-        -c|--config)
-            CONFIG="$2"
+        -n|--count)
+            VM_COUNT="$2"
+            shift 2
+            ;;
+        -s|--size)
+            VM_SIZE="$2"
+            shift 2
+            ;;
+        -r|--region)
+            REGION="$2"
             shift 2
             ;;
         *)
-            PLATFORM="$1"
+            if [ -z "$PLATFORM" ]; then
+                PLATFORM="$1"
+            else
+                echo "Error: Unknown argument: $1"
+                show_usage
+                exit 1
+            fi
             shift
             ;;
     esac
 done
 
-# Validate platform
-if [[ ! "$PLATFORM" =~ ^(kvm|aws|azure)$ ]]; then
-    echo "Error: Invalid platform. Must be one of: kvm, aws, azure"
-    usage
+# Check if platform is specified
+if [ -z "$PLATFORM" ]; then
+    echo "Error: Platform must be specified"
+    show_usage
+    exit 1
 fi
 
-# Set paths
-ROCKY9_TOOLS_DIR="$CHASM_DATA_DIR/tools/rocky9"
-COMMON_SCRIPT="$ROCKY9_TOOLS_DIR/common.sh"
+# Set data directory
+RIFT_DATA_DIR="${RIFT_DATA_DIR:-/usr/share/rift}"
+ROCKY9_TOOLS_DIR="$RIFT_DATA_DIR/tools/rocky9"
 
-# Source Rocky9 common functions if they exist
-if [[ -f "$COMMON_SCRIPT" ]]; then
-    source "$COMMON_SCRIPT"
+# Check if Rocky9 tools are available
+if [ ! -d "$ROCKY9_TOOLS_DIR" ]; then
+    echo "Error: Rocky9 tools not found at $ROCKY9_TOOLS_DIR"
+    echo "Please ensure Rift is properly installed with Rocky9 tools."
+    exit 1
 fi
 
-# Execute the appropriate creation script based on platform
+# Execute platform-specific script
 case "$PLATFORM" in
     kvm)
-        if [[ "$FORCE" == "true" ]]; then
-            "$ROCKY9_TOOLS_DIR/create_vms_cloudinit.sh" --force ${CONFIG:+--config "$CONFIG"}
-        else
-            "$ROCKY9_TOOLS_DIR/create_vms_cloudinit.sh" ${CONFIG:+--config "$CONFIG"}
-        fi
+        "$ROCKY9_TOOLS_DIR/create_vms.sh" -n "$VM_COUNT" -s "$VM_SIZE" ${VERBOSE:+-v}
         ;;
     aws)
-        if [[ "$FORCE" == "true" ]]; then
-            "$ROCKY9_TOOLS_DIR/create_vms_aws.sh" --force ${CONFIG:+--config "$CONFIG"}
-        else
-            "$ROCKY9_TOOLS_DIR/create_vms_aws.sh" ${CONFIG:+--config "$CONFIG"}
-        fi
+        "$ROCKY9_TOOLS_DIR/create_vms_aws.sh" -n "$VM_COUNT" -s "$VM_SIZE" -r "$REGION" ${VERBOSE:+-v}
         ;;
     azure)
-        if [[ "$FORCE" == "true" ]]; then
-            "$ROCKY9_TOOLS_DIR/create_vms_azure.sh" --force ${CONFIG:+--config "$CONFIG"}
-        else
-            "$ROCKY9_TOOLS_DIR/create_vms_azure.sh" ${CONFIG:+--config "$CONFIG"}
-        fi
+        "$ROCKY9_TOOLS_DIR/create_vms_azure.sh" -n "$VM_COUNT" -s "$VM_SIZE" -r "$REGION" ${VERBOSE:+-v}
+        ;;
+    *)
+        echo "Error: Unsupported platform: $PLATFORM"
+        echo "Supported platforms: kvm, aws, azure"
+        exit 1
         ;;
 esac 

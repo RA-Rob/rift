@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Preflight command for Chasm
+# Preflight command for Rift
 
 # Source common functions
-if [ -f "/usr/libexec/chasm/commands/common.sh" ]; then
-    source "/usr/libexec/chasm/commands/common.sh"
+if [ -f "/usr/libexec/rift/commands/common.sh" ]; then
+    source "/usr/libexec/rift/commands/common.sh"
 else
     source "$(dirname "$0")/common.sh"
 fi
@@ -17,6 +17,7 @@ run_preflight() {
     
     check_requirements "$inventory_file"
     set_ssh_key "$ssh_key"
+    
     echo "Running preflight checks..."
-    ansible-playbook $verbose playbooks/preflight.yml -i "$inventory_file" -e "deployment_type=$deployment_type"
+    ansible-playbook playbooks/preflight.yml -i "$inventory_file" -e "deployment_type=$deployment_type" $verbose
 } 

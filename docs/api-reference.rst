@@ -4,7 +4,7 @@ API Reference
 Core Modules
 -----------
 
-.. automodule:: chasm.core
+.. automodule:: rift.core
    :members:
    :undoc-members:
    :show-inheritance:
@@ -12,7 +12,7 @@ Core Modules
 CLI Interface
 -----------
 
-.. automodule:: chasm.cli
+.. automodule:: rift.cli
    :members:
    :undoc-members:
    :show-inheritance:
@@ -20,7 +20,7 @@ CLI Interface
 Inventory Management
 -----------------
 
-.. automodule:: chasm.inventory
+.. automodule:: rift.inventory
    :members:
    :undoc-members:
    :show-inheritance:
@@ -28,7 +28,7 @@ Inventory Management
 Playbook Management
 ----------------
 
-.. automodule:: chasm.playbook
+.. automodule:: rift.playbook
    :members:
    :undoc-members:
    :show-inheritance:
@@ -36,7 +36,7 @@ Playbook Management
 Role Management
 ------------
 
-.. automodule:: chasm.role
+.. automodule:: rift.role
    :members:
    :undoc-members:
    :show-inheritance:
@@ -44,7 +44,7 @@ Role Management
 Configuration
 -----------
 
-.. automodule:: chasm.config
+.. automodule:: rift.config
    :members:
    :undoc-members:
    :show-inheritance:
@@ -52,7 +52,7 @@ Configuration
 Utilities
 --------
 
-.. automodule:: chasm.utils
+.. automodule:: rift.utils
    :members:
    :undoc-members:
    :show-inheritance: 

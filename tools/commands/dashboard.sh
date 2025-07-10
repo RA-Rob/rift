@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Dashboard command for Chasm - Add Grafana dashboards to controller node
+# Dashboard command for Rift - Add Grafana dashboards to controller node
 
 # Source common functions
-if [ -f "/usr/libexec/chasm/commands/common.sh" ]; then
-    source "/usr/libexec/chasm/commands/common.sh"
+if [ -f "/usr/libexec/rift/commands/common.sh" ]; then
+    source "/usr/libexec/rift/commands/common.sh"
 else
     source "$(dirname "$0")/common.sh"
 fi
@@ -137,7 +137,7 @@ add_dashboard() {
           Dashboard ID: {{ dashboard_import.json.id }}
           Dashboard UID: {{ dashboard_import.json.uid }}
           Dashboard URL: {{ grafana_url }}/d/{{ dashboard_import.json.uid }}
-        dest: "/var/log/chasm/dashboard-{{ dashboard_import.json.uid }}.log"
+        dest: "/var/log/rift/dashboard-{{ dashboard_import.json.uid }}.log"
         mode: '0644'
       when: dashboard_import.json.id is defined
 EOF
@@ -292,9 +292,9 @@ handle_dashboard_command() {
     
     # Dashboard command usage
     dashboard_usage() {
-        echo "Dashboard Management for Chasm"
+        echo "Dashboard Management for Rift"
         echo
-        echo "Usage: chasm dashboard <subcommand> [options]"
+        echo "Usage: rift dashboard <subcommand> [options]"
         echo
         echo "Subcommands:"
         echo "  add       Add a dashboard from JSON file to Grafana"
@@ -309,10 +309,10 @@ handle_dashboard_command() {
         echo "  --password        Grafana password (default: admin)"
         echo
         echo "Examples:"
-        echo "  chasm dashboard add -d my-dashboard.json"
-        echo "  chasm dashboard add -d dashboard.json -u http://grafana.example.com:3000"
-        echo "  chasm dashboard list"
-        echo "  chasm dashboard validate -d dashboard.json"
+        echo "  rift dashboard add -d my-dashboard.json"
+        echo "  rift dashboard add -d dashboard.json -u http://grafana.example.com:3000"
+        echo "  rift dashboard list"
+        echo "  rift dashboard validate -d dashboard.json"
     }
     
     case "$subcommand" in

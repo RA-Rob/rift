@@ -3,8 +3,8 @@ ansible_user: your-ssh-user
 ansible_python_interpreter: /usr/bin/python3
 
 # Installation user configuration
-install_user: chasmuser
-install_group: chasmuser
+install_user: riftuser
+install_group: riftuser
 install_uid: 1000
 install_gid: 1000
 
@@ -34,12 +34,12 @@ controller_packages:
   - docker-buildx-plugin
   - docker-compose-plugin
 
-# Chasm configuration
-chasm:
+# Rift configuration
+rift:
   version: "{{ lookup('file', '../VERSION') | trim }}"
-  data_dir: /opt/chasm
-  log_dir: /var/log/chasm
-  config_dir: /etc/chasm
+  data_dir: /opt/rift
+  log_dir: /var/log/rift
+  config_dir: /etc/rift
   
   # Controller configuration
   controller:

@@ -12,11 +12,11 @@
   roles:
     - cloud
 
-- name: Deploy Chasm
-  hosts: chasm_servers
+- name: Deploy Rift
+  hosts: rift_servers
   become: true
   roles:
-    - chasm
+    - rift
   vars:
-    chasm_version: "{{ lookup('file', 'VERSION') | trim }}"
+    rift_version: "{{ lookup('file', 'VERSION') | trim }}"
     deployment_type: "{{ deployment_type | default('standard') }}" 

@@ -1,12 +1,12 @@
-.. Chasm documentation master file, created by
+.. Rift documentation master file, created by
    sphinx-quickstart on Fri Jun 13 10:00:25 2025.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Chasm's documentation!
-================================
+Welcome to Rift's documentation!
+===============================
 
-Chasm is an Ansible-based automation tool for managing and deploying infrastructure.
+Rift is an Ansible-based automation tool for managing and deploying infrastructure.
 
 .. toctree::
    :maxdepth: 2

@@ -54,5 +54,5 @@ jobs:
           # Install the RPM
           rpm -ivh "${{ inputs.rpm_path }}"
           
-          # Test chasm command
-          chasm version || exit 1 
+          # Test rift command
+          rift version || exit 1 

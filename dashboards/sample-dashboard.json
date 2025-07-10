@@ -1,31 +1,17 @@
 {
   "dashboard": {
-    "id": null,
-    "title": "Chasm System Monitoring",
-    "tags": ["chasm", "system", "monitoring"],
+    "title": "Rift System Monitoring",
+    "tags": ["rift", "system", "monitoring"],
     "timezone": "browser",
     "panels": [
       {
         "id": 1,
-        "title": "System Load",
+        "title": "CPU Usage",
         "type": "graph",
         "targets": [
           {
-            "expr": "system_load1",
-            "format": "time_series",
-            "legendFormat": "1m load average"
-          }
-        ],
-        "xAxis": {
-          "mode": "time"
-        },
-        "yAxes": [
-          {
-            "label": "Load",
-            "min": 0
-          },
-          {
-            "show": false
+            "expr": "100 - (avg by (instance) (irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+            "legendFormat": "CPU Usage"
           }
         ],
         "gridPos": {
@@ -41,22 +27,8 @@
         "type": "graph",
         "targets": [
           {
-            "expr": "memory_usage_percent",
-            "format": "time_series",
-            "legendFormat": "Memory Usage %"
-          }
-        ],
-        "xAxis": {
-          "mode": "time"
-        },
-        "yAxes": [
-          {
-            "label": "Percent",
-            "min": 0,
-            "max": 100
-          },
-          {
-            "show": false
+            "expr": "(node_memory_MemTotal_bytes - node_memory_MemFree_bytes) / node_memory_MemTotal_bytes * 100",
+            "legendFormat": "Memory Usage"
           }
         ],
         "gridPos": {
@@ -69,20 +41,16 @@
       {
         "id": 3,
         "title": "Disk Usage",
-        "type": "singlestat",
+        "type": "graph",
         "targets": [
           {
-            "expr": "disk_usage_percent",
-            "format": "time_series"
+            "expr": "100 - ((node_filesystem_avail_bytes{mountpoint=\"/\",fstype!=\"rootfs\"} / node_filesystem_size_bytes{mountpoint=\"/\",fstype!=\"rootfs\"}) * 100)",
+            "legendFormat": "Disk Usage"
           }
         ],
-        "valueName": "current",
-        "format": "percent",
-        "thresholds": "70,90",
-        "colorBackground": true,
         "gridPos": {
-          "h": 4,
-          "w": 6,
+          "h": 8,
+          "w": 12,
           "x": 0,
           "y": 8
         }
@@ -93,32 +61,18 @@
         "type": "graph",
         "targets": [
           {
-            "expr": "network_receive_bytes_rate",
-            "format": "time_series",
-            "legendFormat": "Receive"
+            "expr": "rate(node_network_receive_bytes_total[5m])",
+            "legendFormat": "RX bytes"
           },
           {
-            "expr": "network_transmit_bytes_rate",
-            "format": "time_series",
-            "legendFormat": "Transmit"
-          }
-        ],
-        "xAxis": {
-          "mode": "time"
-        },
-        "yAxes": [
-          {
-            "label": "Bytes/sec",
-            "min": 0
-          },
-          {
-            "show": false
+            "expr": "rate(node_network_transmit_bytes_total[5m])",
+            "legendFormat": "TX bytes"
           }
         ],
         "gridPos": {
           "h": 8,
-          "w": 18,
-          "x": 6,
+          "w": 12,
+          "x": 12,
           "y": 8
         }
       }
@@ -127,15 +81,38 @@
       "from": "now-1h",
       "to": "now"
     },
-    "timepicker": {},
+    "timepicker": {
+      "refresh_intervals": [
+        "5s",
+        "10s",
+        "30s",
+        "1m",
+        "5m",
+        "15m",
+        "30m",
+        "1h",
+        "2h",
+        "1d"
+      ],
+      "time_options": [
+        "5m",
+        "15m",
+        "1h",
+        "6h",
+        "12h",
+        "24h",
+        "2d",
+        "7d",
+        "30d"
+      ]
+    },
     "templating": {
       "list": []
     },
     "annotations": {
       "list": []
     },
-    "refresh": "30s",
-    "schemaVersion": 16,
+    "schemaVersion": 27,
     "version": 1,
     "links": []
   },
@@ -145,11 +122,11 @@
     "canEdit": true,
     "canAdmin": true,
     "canStar": true,
-    "slug": "chasm-system-monitoring",
-    "url": "/d/chasm-system/chasm-system-monitoring",
+    "slug": "rift-system-monitoring",
+    "url": "/d/rift-system/rift-system-monitoring",
     "expires": "0001-01-01T00:00:00Z",
-    "created": "2024-01-01T00:00:00Z",
-    "updated": "2024-01-01T00:00:00Z",
+    "created": "2025-01-14T16:00:00Z",
+    "updated": "2025-01-14T16:00:00Z",
     "updatedBy": "admin",
     "createdBy": "admin",
     "version": 1,

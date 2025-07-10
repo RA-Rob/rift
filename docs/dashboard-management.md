@@ -1,6 +1,6 @@
-# Dashboard Management with Chasm
+# Dashboard Management with Rift
 
-Chasm provides built-in support for managing Grafana dashboards on the controller node. The `dashboard` command allows you to add, list, and validate Grafana dashboards using JSON files.
+Rift provides built-in support for managing Grafana dashboards on the controller node. The `dashboard` command allows you to add, list, and validate Grafana dashboards using JSON files.
 
 ## Prerequisites
 
@@ -18,7 +18,7 @@ Before using the dashboard management features, ensure that:
 Add a dashboard from a JSON file to Grafana:
 
 ```bash
-chasm dashboard add -d <dashboard-file.json> [options]
+rift dashboard add -d <dashboard-file.json> [options]
 ```
 
 #### Options:
@@ -30,13 +30,13 @@ chasm dashboard add -d <dashboard-file.json> [options]
 #### Examples:
 ```bash
 # Add dashboard with default settings
-chasm dashboard add -d my-dashboard.json
+rift dashboard add -d my-dashboard.json
 
 # Add dashboard with custom Grafana URL
-chasm dashboard add -d dashboard.json -u http://grafana.example.com:3000
+rift dashboard add -d dashboard.json -u http://grafana.example.com:3000
 
 # Add dashboard with custom credentials
-chasm dashboard add -d dashboard.json --user myuser --password mypass
+rift dashboard add -d dashboard.json --user myuser --password mypass
 ```
 
 ### List Dashboards
@@ -44,7 +44,7 @@ chasm dashboard add -d dashboard.json --user myuser --password mypass
 List all existing dashboards in Grafana:
 
 ```bash
-chasm dashboard list [options]
+rift dashboard list [options]
 ```
 
 #### Options:
@@ -54,7 +54,7 @@ chasm dashboard list [options]
 
 #### Example:
 ```bash
-chasm dashboard list
+rift dashboard list
 ```
 
 ### Validate Dashboard
@@ -62,7 +62,7 @@ chasm dashboard list
 Validate a dashboard JSON file before importing:
 
 ```bash
-chasm dashboard validate -d <dashboard-file.json>
+rift dashboard validate -d <dashboard-file.json>
 ```
 
 #### Options:
@@ -70,15 +70,15 @@ chasm dashboard validate -d <dashboard-file.json>
 
 #### Example:
 ```bash
-chasm dashboard validate -d my-dashboard.json
+rift dashboard validate -d my-dashboard.json
 ```
 
 ## Dashboard Storage
 
-Chasm includes a dedicated `dashboards/` directory for storing Grafana dashboard JSON files. This directory is:
+Rift includes a dedicated `dashboards/` directory for storing Grafana dashboard JSON files. This directory is:
 
-- **Development**: Located at `./dashboards/` in your chasm workspace
-- **Installed**: Located at `/usr/share/chasm/dashboards/` when installed via RPM
+- **Development**: Located at `./dashboards/` in your rift workspace
+- **Installed**: Located at `/usr/share/rift/dashboards/` when installed via RPM
 - **Purpose**: Central location for all dashboard definitions used in your deployments
 
 ### Organization
@@ -88,11 +88,11 @@ You can organize dashboards in the dashboards directory by:
 - Environment (subdirectories if needed)
 - Purpose (infrastructure, application, security, etc.)
 
-All JSON files in the dashboards directory are included in the chasm release packages.
+All JSON files in the dashboards directory are included in the rift release packages.
 
 ## Dashboard JSON Format
 
-Dashboard JSON files should follow the Grafana dashboard export format. Chasm supports both formats:
+Dashboard JSON files should follow the Grafana dashboard export format. Rift supports both formats:
 
 1. **Wrapped Format**: Dashboard JSON wrapped in a "dashboard" object (typical of API exports)
 2. **Direct Format**: Dashboard JSON as exported directly from Grafana UI
@@ -188,7 +188,7 @@ Here's a minimal example of the wrapped format:
 - Dashboard ID and UID tracking
 
 ### Logging
-- Dashboard import logs stored in `/var/log/chasm/`
+- Dashboard import logs stored in `/var/log/rift/`
 - Each dashboard gets a unique log file with import details
 - Includes dashboard URL for easy access
 
@@ -197,83 +197,77 @@ Here's a minimal example of the wrapped format:
 ### Common Issues
 
 1. **Grafana not accessible**
-   ```
-   Error: Grafana is not accessible at http://localhost:3000
-   ```
-   - Ensure Grafana is running on the controller node
-   - Check firewall settings
-   - Verify the Grafana URL
+   - Check that Grafana is running on the controller node
+   - Verify the Grafana URL is correct
+   - Ensure firewall rules allow access to Grafana port
 
-2. **Authentication failed**
-   ```
-   Error: HTTP 401 Unauthorized
-   ```
-   - Check Grafana username and password
+2. **Authentication failures**
+   - Verify Grafana username and password
+   - Check if default credentials have been changed
    - Ensure the user has dashboard creation permissions
 
 3. **Invalid JSON format**
-   ```
-   Error: Invalid JSON format in dashboard file
-   ```
-   - Validate JSON syntax using `chasm dashboard validate`
-   - Check for missing commas or brackets
-   - Ensure proper encoding (UTF-8)
+   - Validate JSON syntax using `rift dashboard validate`
+   - Check for missing required fields
+   - Ensure the dashboard format is supported
 
-4. **Missing required fields**
-   ```
-   Warning: Dashboard JSON missing recommended field: title
-   ```
-   - Add missing fields to your dashboard JSON
-   - Use `chasm dashboard validate` to check for issues
+4. **Permission errors**
+   - Verify the user has sudo access on the controller node
+   - Check file permissions on dashboard files
+   - Ensure log directory exists and is writable
 
-### Log Locations
+### Validation Tips
 
-- Dashboard import logs: `/var/log/chasm/dashboard-<uid>.log`
-- Ansible execution logs: Use `-v` flag for verbose output
+- Always validate dashboards before importing using `rift dashboard validate`
+- Test with a simple dashboard first to verify connectivity
+- Check Grafana logs for additional error details
 
-## Examples
+### Debug Mode
 
-### Sample Dashboard
+Enable verbose output for detailed debugging:
 
-A sample dashboard JSON file is provided at `dashboards/sample-dashboard.json`. This includes:
-- System load monitoring
-- Memory usage graphs
-- Disk usage single stat
-- Network traffic graphs
-
-To use the sample dashboard:
 ```bash
-chasm dashboard add -d dashboards/sample-dashboard.json
+rift dashboard add -d dashboard.json -v
 ```
+
+## Log Files
+
+Dashboard operations create log files in `/var/log/rift/`:
+- Dashboard import logs: `/var/log/rift/dashboard-<uid>.log`
+- Each log contains dashboard details and import results
+- Logs include direct links to the imported dashboards
+
+## Advanced Usage
 
 ### Batch Import
 
-To import multiple dashboards from the dashboards directory:
+Import multiple dashboards at once:
+
 ```bash
 # Import all dashboards from the dashboards directory
 for dashboard in dashboards/*.json; do
-    chasm dashboard add -d "$dashboard"
+  rift dashboard add -d "$dashboard"
 done
 
-# Or when installed via RPM
-for dashboard in /usr/share/chasm/dashboards/*.json; do
-    chasm dashboard add -d "$dashboard"
+# Import dashboards from installed location
+for dashboard in /usr/share/rift/dashboards/*.json; do
+  rift dashboard add -d "$dashboard"
 done
 ```
 
-## Security Considerations
+### Custom Configuration
 
-- Store Grafana credentials securely
-- Use environment variables for passwords in scripts
-- Consider using Grafana API keys instead of user credentials
-- Restrict dashboard management to authorized users only
+You can customize the dashboard import behavior by:
+- Setting custom Grafana URL and credentials
+- Using different inventory files for different environments
+- Organizing dashboards by environment or application
 
-## Integration with Chasm Deployment
+### Automation
 
-The dashboard command integrates seamlessly with other Chasm commands:
+Dashboard management can be automated as part of your deployment pipeline:
 
-1. Deploy your infrastructure: `chasm deploy`
-2. Add monitoring dashboards: `chasm dashboard add -d monitoring.json`
-3. Verify installation: `chasm test`
+1. Deploy your infrastructure: `rift deploy`
+2. Add monitoring dashboards: `rift dashboard add -d monitoring.json`
+3. Verify installation: `rift test`
 
-This workflow ensures your monitoring is set up consistently across deployments. 
+This ensures that your monitoring dashboards are deployed alongside your infrastructure, providing immediate visibility into your system's health and performance. 

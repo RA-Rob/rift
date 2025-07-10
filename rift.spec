@@ -1,16 +1,16 @@
-Name:           chasm
+Name:           rift
 Version:        0.0.1
 Release:        0.rc1%{?dist}
-Summary:        Chasm - Ansible-based Infrastructure Management
+Summary:        Rift - Ansible-based Infrastructure Management
 
 License:        MIT
-URL:            https://github.com/RA-Rob/chasm
+URL:            https://github.com/RA-Rob/rift
 Source0:        %{name}-%{version}.tar.gz
 Source1:        requirements.txt
 BuildArch:      noarch
 
 # Define conditionals
-%define _with_rocky9_tools %(if [ -f %{buildroot}%{_datadir}/chasm/.rocky9_tools_installed ]; then echo 1; else echo 0; fi)
+%define _with_rocky9_tools %(if [ -f %{buildroot}%{_datadir}/rift/.rocky9_tools_installed ]; then echo 1; else echo 0; fi)
 
 # Common requirements
 Requires:       ansible-core >= 2.9
@@ -37,13 +37,13 @@ Requires:       qemu-kvm
 Requires:       virt-install
 
 %description
-Chasm is an Ansible-based infrastructure management system that provides automated deployment and configuration capabilities.
+Rift is an Ansible-based infrastructure management system that provides automated deployment and configuration capabilities.
 It includes tools for managing VMs across multiple platforms including KVM, AWS, and Azure.
 
 The following commands are available:
-- chasm vm-create: Create VMs on KVM, AWS, or Azure
-- chasm vm-cleanup: Clean up VMs and associated resources
-- chasm vm-test: Test VM connectivity and configuration
+- rift vm-create: Create VMs on KVM, AWS, or Azure
+- rift vm-cleanup: Clean up VMs and associated resources
+- rift vm-test: Test VM connectivity and configuration
 
 Note: AWS and Azure CLI tools are optional dependencies. Install them separately if you need cloud provider support.
 
@@ -64,50 +64,50 @@ cd ..
 %install
 rm -rf %{buildroot}
 mkdir -p %{buildroot}%{_bindir}
-mkdir -p %{buildroot}%{_libexecdir}/chasm/commands
-mkdir -p %{buildroot}%{_datadir}/chasm
-mkdir -p %{buildroot}%{_datadir}/chasm/playbooks
-mkdir -p %{buildroot}%{_datadir}/chasm/roles
-mkdir -p %{buildroot}%{_datadir}/chasm/inventory
-mkdir -p %{buildroot}%{_datadir}/chasm/tools
-mkdir -p %{buildroot}%{_datadir}/chasm/tools/rocky9
+mkdir -p %{buildroot}%{_libexecdir}/rift/commands
+mkdir -p %{buildroot}%{_datadir}/rift
+mkdir -p %{buildroot}%{_datadir}/rift/playbooks
+mkdir -p %{buildroot}%{_datadir}/rift/roles
+mkdir -p %{buildroot}%{_datadir}/rift/inventory
+mkdir -p %{buildroot}%{_datadir}/rift/tools
+mkdir -p %{buildroot}%{_datadir}/rift/tools/rocky9
 mkdir -p %{buildroot}%{_docdir}/%{name}
 mkdir -p %{buildroot}%{_docdir}/%{name}/html
 
 # Install VERSION file
-install -m 644 VERSION %{buildroot}%{_datadir}/chasm/VERSION
+install -m 644 VERSION %{buildroot}%{_datadir}/rift/VERSION
 
 # Install documentation
 install -m 644 docs/vm-management.rst %{buildroot}%{_docdir}/%{name}/vm-management.rst
 install -m 644 docs/dashboard-management.md %{buildroot}%{_docdir}/%{name}/dashboard-management.md
 cp -r docs/_build/html/* %{buildroot}%{_docdir}/%{name}/html/
 
-# Install the main chasm script
-install -m 755 tools/chasm %{buildroot}%{_bindir}/chasm
+# Install the main rift script
+install -m 755 tools/rift %{buildroot}%{_bindir}/rift
 
 # Install command scripts
-install -m 755 tools/commands/*.sh %{buildroot}%{_libexecdir}/chasm/commands/
+install -m 755 tools/commands/*.sh %{buildroot}%{_libexecdir}/rift/commands/
 
 # Install playbooks, roles, and inventory
-cp -r playbooks/* %{buildroot}%{_datadir}/chasm/playbooks/
-cp -r roles/* %{buildroot}%{_datadir}/chasm/roles/
-cp -r inventory/* %{buildroot}%{_datadir}/chasm/inventory/
+cp -r playbooks/* %{buildroot}%{_datadir}/rift/playbooks/
+cp -r roles/* %{buildroot}%{_datadir}/rift/roles/
+cp -r inventory/* %{buildroot}%{_datadir}/rift/inventory/
 
 # Install tools
-cp tools/[!c]*.sh %{buildroot}%{_datadir}/chasm/tools/ 2>/dev/null || :
+cp tools/[!c]*.sh %{buildroot}%{_datadir}/rift/tools/ 2>/dev/null || :
 
 # Install Rocky9Ansible tools if present
-mkdir -p %{buildroot}%{_datadir}/chasm/tools/rocky9
+mkdir -p %{buildroot}%{_datadir}/rift/tools/rocky9
 if [ -d "Rocky9Ansible/tools" ] && ls Rocky9Ansible/tools/*.sh >/dev/null 2>&1; then
-    cp Rocky9Ansible/tools/*.sh %{buildroot}%{_datadir}/chasm/tools/rocky9/
-    touch %{buildroot}%{_datadir}/chasm/.rocky9_tools_installed
+    cp Rocky9Ansible/tools/*.sh %{buildroot}%{_datadir}/rift/tools/rocky9/
+    touch %{buildroot}%{_datadir}/rift/.rocky9_tools_installed
 fi
 
 # Create ansible.cfg
-cat > %{buildroot}%{_datadir}/chasm/ansible.cfg << 'EOF'
+cat > %{buildroot}%{_datadir}/rift/ansible.cfg << 'EOF'
 [defaults]
-inventory = %{_datadir}/chasm/inventory
-roles_path = %{_datadir}/chasm/roles
+inventory = %{_datadir}/rift/inventory
+roles_path = %{_datadir}/rift/roles
 host_key_checking = False
 retry_files_enabled = False
 stdout_callback = yaml
@@ -115,14 +115,14 @@ bin_ansible_callbacks = True
 EOF
 
 # Create inventory directories
-mkdir -p %{buildroot}%{_datadir}/chasm/inventory/host_vars
-mkdir -p %{buildroot}%{_datadir}/chasm/inventory/group_vars
+mkdir -p %{buildroot}%{_datadir}/rift/inventory/host_vars
+mkdir -p %{buildroot}%{_datadir}/rift/inventory/group_vars
 
 # Create dashboards directory and install dashboard files
-mkdir -p %{buildroot}%{_datadir}/chasm/dashboards
+mkdir -p %{buildroot}%{_datadir}/rift/dashboards
 # Install all JSON files from dashboards directory
 if ls dashboards/*.json >/dev/null 2>&1; then
-    cp dashboards/*.json %{buildroot}%{_datadir}/chasm/dashboards/
+    cp dashboards/*.json %{buildroot}%{_datadir}/rift/dashboards/
 fi
 
 %files
@@ -130,14 +130,14 @@ fi
 %doc %{_docdir}/%{name}/vm-management.rst
 %doc %{_docdir}/%{name}/dashboard-management.md
 %doc %{_docdir}/%{name}/html/
-%{_datadir}/chasm/
-%{_bindir}/chasm
-%{_libexecdir}/chasm/
-%attr(755,root,root) %{_libexecdir}/chasm/commands/*.sh
-%attr(755,root,root) %{_datadir}/chasm/tools/*.sh
-%dir %{_datadir}/chasm/tools/rocky9
+%{_datadir}/rift/
+%{_bindir}/rift
+%{_libexecdir}/rift/
+%attr(755,root,root) %{_libexecdir}/rift/commands/*.sh
+%attr(755,root,root) %{_datadir}/rift/tools/*.sh
+%dir %{_datadir}/rift/tools/rocky9
 %if 0%{?_with_rocky9_tools}
-%attr(755,root,root) %{_datadir}/chasm/tools/rocky9/*.sh
+%attr(755,root,root) %{_datadir}/rift/tools/rocky9/*.sh
 %endif
 
 %changelog

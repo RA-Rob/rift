@@ -1,6 +1,6 @@
 # Dashboard Directory Implementation Summary
 
-This document summarizes the changes made to create a dedicated `dashboards/` directory for Grafana dashboard management in Chasm.
+This document summarizes the changes made to create a dedicated `dashboards/` directory for Grafana dashboard management in Rift.
 
 ## Changes Made
 
@@ -9,13 +9,13 @@ This document summarizes the changes made to create a dedicated `dashboards/` di
 - **Purpose**: Dedicated location for all Grafana dashboard JSON files
 - **Contents**: All dashboard definitions are now centralized in this directory
 
-### 2. RPM Package Updates (`chasm.spec`)
+### 2. RPM Package Updates (`rift.spec`)
 - Updated directory creation from `examples` to `dashboards`
 - Enhanced file installation to include all JSON files in the dashboards directory
 - Changed from single file installation to wildcard installation:
   ```bash
   # Old: install -m 644 examples/sample-dashboard.json
-  # New: cp dashboards/*.json %{buildroot}%{_datadir}/chasm/dashboards/
+  # New: cp dashboards/*.json %{buildroot}%{_datadir}/rift/dashboards/
   ```
 
 ### 3. Documentation Updates
@@ -47,102 +47,62 @@ This document summarizes the changes made to create a dedicated `dashboards/` di
 #### Improved Import Logic
 - Enhanced dashboard import to handle both JSON formats automatically
 - Added format detection in Ansible playbook
-- Maintains compatibility with existing workflows
+- Better error handling and logging
 
 ### 5. File Locations
 
 #### Development Environment
 - Dashboard files: `./dashboards/`
-- Example files: `dashboards/sample-dashboard.json`, `dashboards/SmokeTestDashboard.json`
+- Sample dashboard: `dashboards/sample-dashboard.json`
 
 #### Installed Environment (RPM)
-- Dashboard files: `/usr/share/chasm/dashboards/`
-- Automatically included in package installations
-
-## Dashboard Formats Support
-
-### Wrapped Format (API Export)
-```json
-{
-  "dashboard": {
-    "title": "My Dashboard",
-    "panels": [...],
-    ...
-  },
-  "meta": {...}
-}
-```
-
-### Direct Format (UI Export)
-```json
-{
-  "title": "My Dashboard",
-  "panels": [...],
-  ...
-}
-```
+- Dashboard files: `/usr/share/rift/dashboards/`
+- Log files: `/var/log/rift/dashboard-*.log`
 
 ## Usage Examples
 
-### Basic Commands
+### Basic Dashboard Management
 ```bash
 # Validate a dashboard
-chasm dashboard validate -d dashboards/my-dashboard.json
+rift dashboard validate -d dashboards/my-dashboard.json
 
-# Add dashboard to Grafana
-chasm dashboard add -d dashboards/system-monitoring.json
+# Add a dashboard
+rift dashboard add -d dashboards/system-monitoring.json
 
 # List existing dashboards
-chasm dashboard list
+rift dashboard list
 
-# Add with custom Grafana settings
-chasm dashboard add -d dashboards/app-metrics.json -u http://grafana.example.com:3000
+# Add with custom Grafana URL
+rift dashboard add -d dashboards/app-metrics.json -u http://grafana.example.com:3000
 ```
 
-### Batch Operations
+### Batch Import
 ```bash
-# Import all dashboards (development)
+# Development environment
 for dashboard in dashboards/*.json; do
-    chasm dashboard add -d "$dashboard"
+    rift dashboard add -d "$dashboard"
 done
 
-# Import all dashboards (installed)
-for dashboard in /usr/share/chasm/dashboards/*.json; do
-    chasm dashboard add -d "$dashboard"
+# Installed environment
+for dashboard in /usr/share/rift/dashboards/*.json; do
+    rift dashboard add -d "$dashboard"
 done
 ```
 
 ## Benefits
 
-1. **Centralized Management**: All dashboards in one location
-2. **Automatic Packaging**: All JSON files automatically included in RPM releases
-3. **Format Flexibility**: Supports both wrapped and direct dashboard formats
-4. **Clear Organization**: Dedicated directory with clear purpose
-5. **Easy Discovery**: Users know exactly where to place dashboard files
-6. **Version Control**: Dashboard definitions tracked with infrastructure code
+1. **Centralized Management**: All dashboard definitions in one location
+2. **Automatic Packaging**: Dashboards included in RPM releases
+3. **Flexible Formats**: Support for both Grafana export formats
+4. **Better Organization**: Clear separation from other project files
+5. **Enhanced Documentation**: Comprehensive usage examples and guides
 
-## Migration Guide
+## Files Updated
 
-For existing users:
-1. Move any dashboard files from `examples/` to `dashboards/`
-2. Update any scripts or documentation referencing `examples/sample-dashboard.json` to `dashboards/sample-dashboard.json`
-3. No changes needed to command syntax - existing commands work as before
+1. **rift.spec**: RPM packaging updates
+2. **README.md**: Project documentation
+3. **docs/dashboard-management.md**: Dashboard usage guide
+4. **tools/commands/dashboard.sh**: Enhanced command implementation
+5. **dashboards/**: New directory structure
 
-## Testing Verified
-
-- ✅ Dashboard validation with both formats
-- ✅ Command help and usage information
-- ✅ Directory structure and file organization
-- ✅ RPM package will include all JSON files
-- ✅ Documentation accuracy and completeness
-- ✅ Backward compatibility maintained
-
-## Files Modified
-
-1. **Directory**: `examples/` → `dashboards/`
-2. **chasm.spec**: RPM packaging updates
-3. **README.md**: Project documentation
-4. **docs/dashboard-management.md**: Command documentation
-5. **tools/commands/dashboard.sh**: Command logic improvements
-
-All changes maintain backward compatibility while providing a more organized and scalable approach to dashboard management. 
+This implementation provides a robust foundation for managing Grafana dashboards as part of the Rift deployment workflow. 

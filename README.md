@@ -1,26 +1,26 @@
-# Chasm
+# Rift
 
-[![Build RPM](https://github.com/RA-Rob/chasm/actions/workflows/build-rpm.yml/badge.svg)](https://github.com/RA-Rob/chasm/actions/workflows/build-rpm.yml)
-[![Test Build](https://github.com/RA-Rob/chasm/actions/workflows/test-build.yml/badge.svg)](https://github.com/RA-Rob/chasm/actions/workflows/test-build.yml)
-[![Documentation Build](https://github.com/RA-Rob/chasm/actions/workflows/docs.yml/badge.svg)](https://github.com/RA-Rob/chasm/actions/workflows/docs.yml)
+[![Build RPM](https://github.com/RA-Rob/rift/actions/workflows/build-rpm.yml/badge.svg)](https://github.com/RA-Rob/rift/actions/workflows/build-rpm.yml)
+[![Test Build](https://github.com/RA-Rob/rift/actions/workflows/test-build.yml/badge.svg)](https://github.com/RA-Rob/rift/actions/workflows/test-build.yml)
+[![Documentation Build](https://github.com/RA-Rob/rift/actions/workflows/docs.yml/badge.svg)](https://github.com/RA-Rob/rift/actions/workflows/docs.yml)
 
 [![Version](https://img.shields.io/badge/version-0.0.1-blue.svg)]
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
-[![Documentation](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://ra-rob.github.io/chasm/)
+[![Documentation](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://ra-rob.github.io/rift/)
 
 [![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/downloads/)
 [![Ansible](https://img.shields.io/badge/ansible-2.9%2B-red.svg)](https://docs.ansible.com/)
 
-[![Issues](https://img.shields.io/github/issues/RA-Rob/chasm.svg)](https://github.com/RA-Rob/chasm/issues)
+[![Issues](https://img.shields.io/github/issues/RA-Rob/rift.svg)](https://github.com/RA-Rob/rift/issues)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 Ansible-based deployment system for Rocky Linux 9 and RHEL 9 environments.
 
 ## Overview
 
-Chasm is a deployment automation system that provides a standardized way to deploy and configure systems in both bare metal and cloud environments. It includes preflight checks, system configuration, and deployment capabilities.
+Rift is a deployment automation system that provides a standardized way to deploy and configure systems in both bare metal and cloud environments. It includes preflight checks, system configuration, and deployment capabilities.
 
-For detailed documentation, including installation guides, usage instructions, and API reference, visit our [documentation site](https://ra-rob.github.io/chasm/).
+For detailed documentation, including installation guides, usage instructions, and API reference, visit our [documentation site](https://ra-rob.github.io/rift/).
 
 ## Features
 
@@ -36,7 +36,7 @@ For detailed documentation, including installation guides, usage instructions, a
 ```
 .
 ├── tools/
-│   ├── chasm              # Main deployment script
+│   ├── rift               # Main deployment script
 │   └── commands/          # Command-specific scripts
 │       ├── common.sh      # Shared utility functions
 │       ├── generate.sh    # Inventory generation
@@ -65,45 +65,45 @@ For detailed documentation, including installation guides, usage instructions, a
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/RA-Rob/chasm.git
-   cd chasm
+   git clone https://github.com/RA-Rob/rift.git
+   cd rift
    ```
 
 2. Make the main script executable:
    ```bash
-   chmod +x tools/chasm
+   chmod +x tools/rift
    ```
 
 ## Usage
 
-The `chasm` script provides several commands for managing your deployment:
+The `rift` script provides several commands for managing your deployment:
 
 ### Generate Inventory
 
 Create a new inventory file interactively:
 ```bash
-./tools/chasm generate
+./tools/rift generate
 ```
 
 ### Verify Inventory
 
 Check the inventory structure and deployment type:
 ```bash
-./tools/chasm verify
+./tools/rift verify
 ```
 
 ### Run Preflight Checks
 
 Perform preflight checks and setup installation user:
 ```bash
-./tools/chasm preflight
+./tools/rift preflight
 ```
 
 ### Deploy
 
-Deploy Chasm to the target environment:
+Deploy Rift to the target environment:
 ```bash
-./tools/chasm deploy
+./tools/rift deploy
 ```
 
 ### Manage Dashboards
@@ -111,20 +111,20 @@ Deploy Chasm to the target environment:
 Add Grafana dashboards to the controller node:
 ```bash
 # Add a specific dashboard
-./tools/chasm dashboard add -d dashboards/sample-dashboard.json
+./tools/rift dashboard add -d dashboards/sample-dashboard.json
 
 # List existing dashboards
-./tools/chasm dashboard list
+./tools/rift dashboard list
 
 # Validate a dashboard file
-./tools/chasm dashboard validate -d dashboards/my-dashboard.json
+./tools/rift dashboard validate -d dashboards/my-dashboard.json
 ```
 
 ### Version Information
 
 Display the current version:
 ```bash
-./tools/chasm version
+./tools/rift version
 ```
 
 ### Command Options
@@ -162,17 +162,17 @@ Display the current version:
 ### Controller-specific Variables
 
 - `controller_packages`: Additional packages for controller nodes
-- `chasm.controller.api_port`: Controller API port
-- `chasm.controller.metrics_port`: Controller metrics port
+- `rift.controller.api_port`: Controller API port
+- `rift.controller.metrics_port`: Controller metrics port
 
 ### Worker-specific Variables
 
-- `chasm.worker.controller_host`: Controller host address
-- `chasm.worker.controller_port`: Controller port
+- `rift.worker.controller_host`: Controller host address
+- `rift.worker.controller_port`: Controller port
 
 ## Dashboards
 
-The `dashboards/` directory contains Grafana dashboard definitions in JSON format. These dashboards can be deployed to Grafana instances running on controller nodes using the `chasm dashboard` command.
+The `dashboards/` directory contains Grafana dashboard definitions in JSON format. These dashboards can be deployed to Grafana instances running on controller nodes using the `rift dashboard` command.
 
 ### Dashboard Organization
 
@@ -185,13 +185,13 @@ The `dashboards/` directory contains Grafana dashboard definitions in JSON forma
 
 ```bash
 # Add a dashboard to Grafana
-chasm dashboard add -d dashboards/my-dashboard.json
+rift dashboard add -d dashboards/my-dashboard.json
 
 # List all dashboards in Grafana
-chasm dashboard list
+rift dashboard list
 
 # Validate a dashboard before deployment
-chasm dashboard validate -d dashboards/my-dashboard.json
+rift dashboard validate -d dashboards/my-dashboard.json
 ```
 
 ## Security
@@ -219,7 +219,7 @@ Rob Weiss <rob.weiss@red-alpha.com>
 
 ## Releases
 
-Chasm is distributed as RPM packages for RHEL 9 and Rocky Linux 9. There are two types of releases:
+Rift is distributed as RPM packages for RHEL 9 and Rocky Linux 9. There are two types of releases:
 
 ### Stable Releases
 Stable releases are versioned using semantic versioning (e.g., `v1.0.0`). These releases are thoroughly tested and recommended for production use.
@@ -235,24 +235,48 @@ The current version is 0.0.1, with release candidate v0.0.1-rc1 available for te
 
 ### Installing from Releases
 
-1. Visit the [GitHub Releases](https://github.com/RA-Rob/chasm/releases) page
+1. Visit the [GitHub Releases](https://github.com/RA-Rob/rift/releases) page
 2. Download the appropriate RPM for your distribution:
-   - `chasm-<version>.rhel9.rpm` for RHEL 9
-   - `chasm-<version>.rocky9.rpm` for Rocky Linux 9
+   - `rift-<version>.rhel9.rpm` for RHEL 9
+   - `rift-<version>.rocky9.rpm` for Rocky Linux 9
 3. Install the RPM:
    ```bash
    # For RHEL 9
-   sudo dnf install chasm-<version>.rhel9.rpm
+   sudo dnf install rift-<version>.rhel9.rpm
 
    # For Rocky Linux 9
-   sudo dnf install chasm-<version>.rocky9.rpm
+   sudo dnf install rift-<version>.rocky9.rpm
    ```
 
 ### Testing Release Candidates
 
 To test a release candidate:
 
-1. Go to the [GitHub Releases](https://github.com/RA-Rob/chasm/releases) page
+1. Go to the [GitHub Releases](https://github.com/RA-Rob/rift/releases) page
 2. Look for releases marked as "Pre-release"
-3. Download and install the RC RPM as described above
-4. Test the functionality and report any issues on GitHub 
+3. Download and test the RC version
+4. Report any issues or feedback
+
+### Building from Source
+
+To build Rift from source:
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/RA-Rob/rift.git
+   cd rift
+   ```
+
+2. Build the RPM:
+   ```bash
+   # Install build dependencies
+   sudo dnf install rpm-build python3-pip
+
+   # Build the RPM
+   make rpm
+   ```
+
+3. Install the built RPM:
+   ```bash
+   sudo dnf install ~/rpmbuild/RPMS/noarch/rift-*.rpm
+   ``` 

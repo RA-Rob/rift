@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Deploy command for Chasm
+# Deploy command for Rift
 
 # Source common functions
-if [ -f "/usr/libexec/chasm/commands/common.sh" ]; then
-    source "/usr/libexec/chasm/commands/common.sh"
+if [ -f "/usr/libexec/rift/commands/common.sh" ]; then
+    source "/usr/libexec/rift/commands/common.sh"
 else
     source "$(dirname "$0")/common.sh"
 fi
@@ -15,6 +15,7 @@ run_deploy() {
     local verbose="$3"
     
     check_requirements "$inventory_file"
-    echo "Deploying Chasm..."
-    ansible-playbook $verbose site.yml -i "$inventory_file" -e "deployment_type=$deployment_type"
+    
+    echo "Deploying Rift..."
+    ansible-playbook site.yml -i "$inventory_file" -e "deployment_type=$deployment_type" $verbose
 } 

@@ -1,90 +1,101 @@
 #!/bin/bash
 
-# Source common functions
-source "$(dirname "$0")/common.sh"
+# VM Cleanup command for Rift
 
-usage() {
-    echo "Usage: chasm vm-cleanup [OPTIONS] <platform>"
-    echo
-    echo "Clean up VMs and associated resources on the specified platform"
-    echo
-    echo "Platforms:"
-    echo "  kvm     Clean up local KVM/libvirt VMs"
-    echo "  aws     Clean up AWS resources"
-    echo "  azure   Clean up Azure resources"
-    echo
-    echo "Options:"
-    echo "  -h, --help     Show this help message"
-    echo "  -f, --force    Skip confirmation prompts"
-    echo "  -c, --config   Path to custom configuration file"
-    exit 1
+show_usage() {
+    cat << EOF
+Usage: rift vm-cleanup [OPTIONS] <platform>
+
+Clean up VMs and associated resources on the specified platform.
+
+PLATFORMS:
+    kvm       Clean up VMs on KVM host
+    aws       Clean up VMs on AWS
+    azure     Clean up VMs on Azure
+
+OPTIONS:
+    -h, --help     Show this help message
+    -v, --verbose  Enable verbose output
+    -f, --force    Force cleanup without confirmation
+    -a, --all      Clean up all resources (including networks, storage)
+
+EXAMPLES:
+    rift vm-cleanup kvm
+    rift vm-cleanup aws --force
+    rift vm-cleanup azure --all
+
+EOF
 }
 
 # Parse command line arguments
-FORCE=false
-CONFIG=""
+PLATFORM=""
+FORCE=""
+ALL=""
+VERBOSE=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
         -h|--help)
-            usage
+            show_usage
+            exit 0
             ;;
-        -f|--force)
-            FORCE=true
+        -v|--verbose)
+            VERBOSE="true"
             shift
             ;;
-        -c|--config)
-            CONFIG="$2"
-            shift 2
+        -f|--force)
+            FORCE="true"
+            shift
+            ;;
+        -a|--all)
+            ALL="true"
+            shift
             ;;
         *)
-            PLATFORM="$1"
+            if [ -z "$PLATFORM" ]; then
+                PLATFORM="$1"
+            else
+                echo "Error: Unknown argument: $1"
+                show_usage
+                exit 1
+            fi
             shift
             ;;
     esac
 done
 
-# Validate platform
-if [[ ! "$PLATFORM" =~ ^(kvm|aws|azure)$ ]]; then
-    echo "Error: Invalid platform. Must be one of: kvm, aws, azure"
-    usage
+# Check if platform is specified
+if [ -z "$PLATFORM" ]; then
+    echo "Error: Platform must be specified"
+    show_usage
+    exit 1
 fi
 
-# Set paths
-ROCKY9_TOOLS_DIR="$CHASM_DATA_DIR/tools/rocky9"
-COMMON_SCRIPT="$ROCKY9_TOOLS_DIR/common.sh"
+# Set data directory
+RIFT_DATA_DIR="${RIFT_DATA_DIR:-/usr/share/rift}"
+ROCKY9_TOOLS_DIR="$RIFT_DATA_DIR/tools/rocky9"
 
-# Source Rocky9 common functions if they exist
-if [[ -f "$COMMON_SCRIPT" ]]; then
-    source "$COMMON_SCRIPT"
+# Check if Rocky9 tools are available
+if [ ! -d "$ROCKY9_TOOLS_DIR" ]; then
+    echo "Error: Rocky9 tools not found at $ROCKY9_TOOLS_DIR"
+    echo "Please ensure Rift is properly installed with Rocky9 tools."
+    exit 1
 fi
 
-# Execute the appropriate cleanup script based on platform
+# Execute platform-specific cleanup script
 case "$PLATFORM" in
     kvm)
-        if [[ "$FORCE" == "true" ]]; then
-            virsh destroy controller worker1 worker2 2>/dev/null || true
-            virsh undefine controller worker1 worker2 --remove-all-storage 2>/dev/null || true
-        else
-            read -p "Are you sure you want to destroy all KVM VMs? [y/N] " confirm
-            if [[ "$confirm" =~ ^[Yy]$ ]]; then
-                virsh destroy controller worker1 worker2 2>/dev/null || true
-                virsh undefine controller worker1 worker2 --remove-all-storage 2>/dev/null || true
-            fi
-        fi
+        "$ROCKY9_TOOLS_DIR/cleanup_vms.sh" ${FORCE:+--force} ${ALL:+--all} ${VERBOSE:+-v}
         ;;
     aws)
-        if [[ "$FORCE" == "true" ]]; then
-            "$ROCKY9_TOOLS_DIR/cleanup_aws.sh" --force ${CONFIG:+--config "$CONFIG"}
-        else
-            "$ROCKY9_TOOLS_DIR/cleanup_aws.sh" ${CONFIG:+--config "$CONFIG"}
-        fi
+        "$ROCKY9_TOOLS_DIR/cleanup_aws.sh" ${FORCE:+--force} ${ALL:+--all} ${VERBOSE:+-v}
         ;;
     azure)
-        if [[ "$FORCE" == "true" ]]; then
-            "$ROCKY9_TOOLS_DIR/cleanup_azure.sh" --force ${CONFIG:+--config "$CONFIG"}
-        else
-            "$ROCKY9_TOOLS_DIR/cleanup_azure.sh" ${CONFIG:+--config "$CONFIG"}
-        fi
+        "$ROCKY9_TOOLS_DIR/cleanup_azure.sh" ${FORCE:+--force} ${ALL:+--all} ${VERBOSE:+-v}
+        ;;
+    *)
+        echo "Error: Unsupported platform: $PLATFORM"
+        echo "Supported platforms: kvm, aws, azure"
+        exit 1
         ;;
 esac 

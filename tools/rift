@@ -1,15 +1,15 @@
 #!/bin/bash
 
-# Chasm - Ansible deployment management script
+# Rift - Ansible deployment management script
 # Author: Rob Weiss
 # Email: rob.weiss@red-alpha.com
 
 # Set script directory and data directory
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-if [ -f "/usr/share/chasm/VERSION" ]; then
+if [ -f "/usr/share/rift/VERSION" ]; then
     # Running from installed location
-    DATA_DIR="/usr/share/chasm"
-    CMD_DIR="/usr/libexec/chasm/commands"
+    DATA_DIR="/usr/share/rift"
+    CMD_DIR="/usr/libexec/rift/commands"
 else
     # Running from development location
     DATA_DIR="$SCRIPT_DIR/.."
@@ -26,7 +26,7 @@ RELEASE="1"
 
 # Print usage information
 usage() {
-    echo "Chasm - Ansible deployment management script"
+    echo "Rift - Ansible deployment management script"
     echo
     echo "Usage: $0 [options] <command> [command-options]"
     echo
@@ -34,7 +34,7 @@ usage() {
     echo "  generate     Generate inventory.ini file interactively"
     echo "  verify       Verify inventory structure and deployment type"
     echo "  preflight    Run preflight checks and setup installation user"
-    echo "  deploy       Deploy Chasm to the target environment"
+    echo "  deploy       Deploy Rift to the target environment"
     echo "  test         Run installation verification tests"
     echo "  dashboard    Manage Grafana dashboards on controller node"
     echo "  version      Show version information"
@@ -59,7 +59,7 @@ usage() {
 
 # Show version information
 show_version() {
-    echo "Chasm version: $VERSION-$RELEASE"
+    echo "Rift version: $VERSION-$RELEASE"
     if command -v ansible &> /dev/null; then
         echo "Ansible version: $(ansible --version | head -n1)"
     else
@@ -76,7 +76,7 @@ run_tests() {
         return 1
     fi
 
-    echo "Running Chasm installation tests..."
+    echo "Running Rift installation tests..."
     ansible-playbook "$playbook" $VERBOSE
     return $?
 }

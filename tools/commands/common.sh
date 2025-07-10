@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Common functions for Chasm commands
+# Common functions for Rift commands
 
 # Function to prompt for input with default value
 prompt() {
@@ -40,7 +40,7 @@ set_ssh_key() {
             echo "Error: SSH key file not found: $ssh_key"
             exit 1
         fi
-        export CHASM_SSH_PUBLIC_KEY="$(cat "$ssh_key")"
+        export RIFT_SSH_PUBLIC_KEY="$(cat "$ssh_key")"
     else
         echo "Error: SSH key file is required for preflight"
         exit 1

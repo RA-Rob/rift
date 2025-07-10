@@ -1,9 +1,9 @@
 ---
 galaxy_info:
-  role_name: chasm
-  author: Chasm Team
-  description: Core Chasm functionality and setup role
-  company: Chasm
+  role_name: rift
+  author: Rift Team
+  description: Core Rift functionality and setup role
+  company: Rift
   license: MIT
   min_ansible_version: 2.9
   platforms:
@@ -11,7 +11,7 @@ galaxy_info:
       versions:
         - 9
   galaxy_tags:
-    - chasm
+    - rift
     - infrastructure
     - setup
 

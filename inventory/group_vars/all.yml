@@ -10,15 +10,15 @@ install_group: "{{ install_user | default('ansible') }}"
 install_uid: "{{ install_uid | default(1000) }}"
 install_gid: "{{ install_gid | default(1000) }}"
 # This should be overridden in a vault or secure location
-chasm_ssh_public_key: "{{ lookup('env', 'CHASM_SSH_PUBLIC_KEY') | default('') }}"
+rift_ssh_public_key: "{{ lookup('env', 'RIFT_SSH_PUBLIC_KEY') | default('') }}"
 
-# Chasm specific variables
-chasm:
-  install_dir: /opt/chasm
-  config_dir: /etc/chasm
-  log_dir: /var/log/chasm
-  user: chasm
-  group: chasm
+# Rift specific variables
+rift:
+  install_dir: /opt/rift
+  config_dir: /etc/rift
+  log_dir: /var/log/rift
+  user: rift
+  group: rift
   controller:
     enabled: "{{ 'controller' in group_names }}"
     api_port: 8080
