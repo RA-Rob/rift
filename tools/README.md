@@ -8,12 +8,18 @@ The tool is organized into a modular structure:
 ```
 tools/
 ├── rift               # Main deployment script
+├── dye-cron.sh        # Automated dye file processing for cron
+├── input-cron.sh      # Automated input file processing for cron
 └── commands/          # Command-specific scripts
     ├── common.sh      # Shared utility functions
     ├── generate.sh    # Inventory generation
     ├── verify.sh      # Inventory verification
     ├── preflight.sh   # Preflight checks
-    └── deploy.sh      # Deployment execution
+    ├── deploy.sh      # Deployment execution
+    ├── dashboard.sh   # Dashboard management
+    ├── dye-add.sh     # Dye file addition
+    ├── dye-remove.sh  # Dye file removal
+    └── input-add.sh   # Input file addition
 ```
 
 ## Commands
@@ -69,6 +75,71 @@ Process:
 - Environment-specific configuration
 - Playbook execution
 - Deployment verification
+
+### dye-add
+Adds dye files from source directory to target directories.
+
+```bash
+./rift dye-add
+```
+
+Features:
+- Processes all .dye files from `/var/abyss/dye`
+- Copies to multiple target directories
+- Sets proper ownership and permissions
+- Removes source files after successful deployment
+
+### dye-remove
+Removes dye files from target directories.
+
+```bash
+./rift dye-remove --list
+./rift dye-remove filename.dye
+./rift dye-remove --all
+```
+
+Features:
+- Lists existing dye files
+- Removes specific files by name
+- Bulk removal with confirmation
+- Safety checks and validation
+
+### input-add
+Adds input files from source directory to target directory with atomic copying.
+
+```bash
+./rift input-add
+```
+
+Features:
+- Processes all files from `/var/abyss/input`
+- Atomic copying prevents early access
+- Preserves source files (no deletion)
+- Sets proper ownership and permissions
+
+## Automated Processing
+
+### Cron Scripts
+
+Two cron scripts are provided for automated file processing:
+
+#### dye-cron.sh
+Automated dye file processing every 5 minutes:
+```bash
+*/5 * * * * /usr/local/bin/dye-cron.sh >> /var/log/dye-processing.log 2>&1
+```
+
+#### input-cron.sh
+Automated input file processing every 5 minutes:
+```bash
+*/5 * * * * /usr/local/bin/input-cron.sh >> /var/log/input-processing.log 2>&1
+```
+
+Both scripts feature:
+- Lock-based execution to prevent concurrent runs
+- Comprehensive logging with automatic rotation
+- System health checks
+- Graceful error handling
 
 ## Command Options
 
