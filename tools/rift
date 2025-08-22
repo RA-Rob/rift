@@ -37,6 +37,8 @@ usage() {
     echo "  deploy       Deploy Rift to the target environment"
     echo "  test         Run installation verification tests"
     echo "  dashboard    Manage Grafana dashboards on controller node"
+    echo "  dye-add      Add dye files from source to target directories"
+    echo "  dye-remove   Remove dye files from target directories"
     echo "  version      Show version information"
     echo "  help         Show this help message"
     echo
@@ -54,6 +56,9 @@ usage() {
     echo "  $0 deploy -t cloud"
     echo "  $0 test"
     echo "  $0 dashboard add -d my-dashboard.json"
+    echo "  $0 dye-add"
+    echo "  $0 dye-remove --list"
+    echo "  $0 dye-remove malware.dye"
     echo "  $0 version"
 }
 
@@ -126,6 +131,8 @@ source "$CMD_DIR/verify.sh"
 source "$CMD_DIR/preflight.sh"
 source "$CMD_DIR/deploy.sh"
 source "$CMD_DIR/dashboard.sh"
+source "$CMD_DIR/dye-add.sh"
+source "$CMD_DIR/dye-remove.sh"
 
 # Execute commands
 case "$COMMAND" in
@@ -146,6 +153,12 @@ case "$COMMAND" in
         ;;
     dashboard)
         handle_dashboard_command "$@"
+        ;;
+    dye-add)
+        handle_dye_add_command "$@"
+        ;;
+    dye-remove)
+        handle_dye_remove_command "$@"
         ;;
     version)
         show_version
