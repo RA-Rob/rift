@@ -10,9 +10,9 @@ import os
 import sys
 sys.path.insert(0, os.path.abspath('..'))
 
-project = 'Chasm'
-copyright = '2024, Chasm Team'
-author = 'Chasm Team'
+project = 'Rift'
+copyright = '2024, Rift Team'
+author = 'Rift Team'
 
 version = '1.0'
 release = '1.0'
