@@ -10,6 +10,7 @@ tools/
 ├── rift               # Main deployment script
 ├── dye-cron.sh        # Automated dye file processing for cron
 ├── input-cron.sh      # Automated input file processing for cron
+├── output-cron.sh     # Automated output file processing for cron
 └── commands/          # Command-specific scripts
     ├── common.sh      # Shared utility functions
     ├── generate.sh    # Inventory generation
@@ -19,7 +20,8 @@ tools/
     ├── dashboard.sh   # Dashboard management
     ├── dye-add.sh     # Dye file addition
     ├── dye-remove.sh  # Dye file removal
-    └── input-add.sh   # Input file addition
+    ├── input-add.sh   # Input file addition
+    └── output-add.sh  # Output file addition
 ```
 
 ## Commands
@@ -117,11 +119,24 @@ Features:
 - Preserves source files (no deletion)
 - Sets proper ownership and permissions
 
+### output-add
+Adds output files from source directory to target directory with atomic copying.
+
+```bash
+./rift output-add
+```
+
+Features:
+- Processes all files from `/opt/exports/abyss-default/outputs/dataExporterinspection`
+- Atomic copying prevents early access
+- Moves source files to processed directory after successful copying
+- Sets proper ownership and permissions
+
 ## Automated Processing
 
 ### Cron Scripts
 
-Two cron scripts are provided for automated file processing:
+Three cron scripts are provided for automated file processing:
 
 #### dye-cron.sh
 Automated dye file processing every 5 minutes:
@@ -135,7 +150,13 @@ Automated input file processing every 5 minutes:
 */5 * * * * /usr/local/bin/input-cron.sh >> /var/log/input-processing.log 2>&1
 ```
 
-Both scripts feature:
+#### output-cron.sh
+Automated output file processing every 5 minutes:
+```bash
+*/5 * * * * /usr/local/bin/output-cron.sh >> /var/log/output-processing.log 2>&1
+```
+
+All scripts feature:
 - Lock-based execution to prevent concurrent runs
 - Comprehensive logging with automatic rotation
 - System health checks

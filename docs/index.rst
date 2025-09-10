@@ -20,6 +20,7 @@ Rift is an Ansible-based automation tool for managing and deploying infrastructu
    dashboard-management
    dye-file-management
    input-file-management
+   output-file-management
    cron-automation
    smoke-test
    api-reference

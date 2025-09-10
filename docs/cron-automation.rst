@@ -1,17 +1,18 @@
 Cron Automation
 ===============
 
-Rift provides automated file processing capabilities through dedicated cron scripts. These scripts enable hands-free processing of dye files and input files at regular intervals.
+Rift provides automated file processing capabilities through dedicated cron scripts. These scripts enable hands-free processing of dye files, input files, and output files at regular intervals.
 
 Overview
 --------
 
-Two cron scripts are available for automated file processing:
+Three cron scripts are available for automated file processing:
 
 - **dye-cron.sh**: Automated processing of dye signature files
 - **input-cron.sh**: Automated processing of input files with atomic operations
+- **output-cron.sh**: Automated processing of output files with atomic operations
 
-Both scripts are designed to run safely in production environments with comprehensive logging, error handling, and concurrent execution prevention.
+All scripts are designed to run safely in production environments with comprehensive logging, error handling, and concurrent execution prevention.
 
 Features
 --------
@@ -19,7 +20,7 @@ Features
 Common Features
 ~~~~~~~~~~~~~~~
 
-Both cron scripts provide:
+All cron scripts provide:
 
 - **Lock-based execution**: Prevents multiple instances from running simultaneously
 - **Automatic log rotation**: Rotates log files when they exceed 10MB
@@ -231,13 +232,113 @@ Switch to the ec2-user and add the cron job:
    # Add this line to run every 5 minutes
    */5 * * * * /usr/local/bin/input-cron.sh >> /var/log/input-processing.log 2>&1
 
+Output File Cron Script
+------------------------
+
+The ``output-cron.sh`` script automatically processes output files from a source directory to a target directory using atomic copy operations.
+
+Script Location
+~~~~~~~~~~~~~~~
+
+- **Development**: ``tools/output-cron.sh``
+- **Installed**: ``/usr/share/rift/output-cron.sh``
+
+Configuration
+~~~~~~~~~~~~~
+
+The script uses the following configuration variables (all configurable via environment variables):
+
+.. code-block:: bash
+
+   # Source and target directories
+   OUTPUT_SOURCE_DIR="${OUTPUT_SOURCE_DIR:-/opt/exports/abyss-default/outputs/dataExporterinspection}"
+   OUTPUT_TARGET_DIR="${OUTPUT_TARGET_DIR:-/var/abyss/output}"
+   OUTPUT_PROCESSED_DIR="${OUTPUT_PROCESSED_DIR:-${OUTPUT_SOURCE_DIR}/processed}"
+   
+   # File ownership and permissions
+   OUTPUT_OWNER_UID="${OUTPUT_OWNER_UID:-500}"
+   OUTPUT_OWNER_GID="${OUTPUT_OWNER_GID:-500}"
+   OUTPUT_PERMISSIONS="${OUTPUT_PERMISSIONS:-644}"
+   
+   # User configuration
+   RIFT_USER="${RIFT_USER:-rift}"
+   
+   # Logging
+   LOG_FILE="/var/log/output-processing.log"
+   MAX_LOG_SIZE=10485760  # 10MB
+
+Processing Workflow
+~~~~~~~~~~~~~~~~~~~
+
+1. **Lock Acquisition**: Prevents concurrent execution
+2. **Directory Validation**: Ensures source, target, and processed directories exist
+3. **Processed Directory Creation**: Auto-creates processed directory if needed
+4. **Sudo Verification**: Confirms passwordless sudo access
+5. **File Discovery**: Finds all files in source directory (any file type)
+6. **Atomic Processing**: Uses temporary files for atomic operations
+7. **Permission Setting**: Sets proper ownership and permissions
+8. **Source File Archival**: Moves original files to processed directory after successful copy
+9. **Logging**: Records all operations with timestamps
+
+Key Features
+~~~~~~~~~~~~
+
+- **Single Target**: Copies to one target directory
+- **File Types**: Processes all file types, not just specific extensions
+- **Source Archival**: Moves source files to processed directory to prevent reprocessing
+- **Atomic Operations**: Uses temporary files and atomic moves for safety
+- **Default User**: Uses ``rift`` user by default
+- **System Output**: Handles system-generated output files for downstream consumption
+
+Installation and Setup
+~~~~~~~~~~~~~~~~~~~~~~
+
+**Step 1: Copy Script to System Location**
+
+.. code-block:: bash
+
+   sudo cp tools/output-cron.sh /usr/local/bin/
+   sudo chmod +x /usr/local/bin/output-cron.sh
+
+**Step 2: Configure Passwordless Sudo**
+
+Add the following to ``/etc/sudoers`` for the ``rift`` user (or your ``RIFT_USER``):
+
+.. code-block:: bash
+
+   # For specific commands (recommended)
+   rift ALL=(ALL) NOPASSWD: /bin/cp, /bin/mv, /bin/rm, /bin/chown, /bin/chmod, /usr/bin/find, /usr/bin/stat, /usr/bin/test
+   
+   # Or for broader access (less secure)
+   rift ALL=(ALL) NOPASSWD: ALL
+
+**Step 3: Set Up Log File**
+
+.. code-block:: bash
+
+   sudo touch /var/log/output-processing.log
+   sudo chown rift:rift /var/log/output-processing.log
+   sudo chmod 644 /var/log/output-processing.log
+
+**Step 4: Install Cron Job**
+
+Switch to the rift user and add the cron job:
+
+.. code-block:: bash
+
+   # Switch to the rift user
+   sudo -u rift crontab -e
+   
+   # Add this line to run every 5 minutes
+   */5 * * * * /usr/local/bin/output-cron.sh >> /var/log/output-processing.log 2>&1
+
 Custom Configuration
 --------------------
 
 Environment Variable Override
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Both scripts support environment variable customization:
+All scripts support environment variable customization:
 
 **Dye Cron Script:**
 
@@ -267,6 +368,24 @@ Both scripts support environment variable customization:
    # Custom user
    export RIFT_USER=myuser
 
+**Output Cron Script:**
+
+.. code-block:: bash
+
+   # Custom directories
+   export OUTPUT_SOURCE_DIR=/custom/source
+   export OUTPUT_TARGET_DIR=/custom/target
+   
+   # Custom ownership
+   export OUTPUT_OWNER_UID=1000
+   export OUTPUT_OWNER_GID=1000
+   
+   # Custom permissions
+   export OUTPUT_PERMISSIONS=755
+   
+   # Custom user
+   export RIFT_USER=myuser
+
 To use custom environment variables in cron, add them to the crontab:
 
 .. code-block:: bash
@@ -279,8 +398,9 @@ To use custom environment variables in cron, add them to the crontab:
    INPUT_TARGET_DIR=/custom/target
    RIFT_USER=myuser
    
-   # Then add the cron job
+   # Then add the cron jobs
    */5 * * * * /usr/local/bin/input-cron.sh >> /var/log/input-processing.log 2>&1
+   */5 * * * * /usr/local/bin/output-cron.sh >> /var/log/output-processing.log 2>&1
 
 Monitoring and Management
 -------------------------
@@ -303,11 +423,12 @@ Checking Cron Job Status
 .. code-block:: bash
 
    # Check for running cron scripts
-   ps aux | grep -E "(dye-cron|input-cron)"
+   ps aux | grep -E "(dye-cron|input-cron|output-cron)"
    
    # Check PID files
    cat ${TMPDIR:-/tmp}/rift-cron/dye-cron.pid 2>/dev/null
    cat ${TMPDIR:-/tmp}/rift-cron/input-cron.pid 2>/dev/null
+   cat ${TMPDIR:-/tmp}/rift-cron/output-cron.pid 2>/dev/null
 
 **Check Lock Files:**
 
@@ -422,7 +543,7 @@ Lock files are now stored in a user-writable directory (``${TMPDIR:-/tmp}/rift-c
 
    .. code-block:: bash
 
-      ps aux | grep -E "(dye-cron|input-cron)" | grep -v grep
+      ps aux | grep -E "(dye-cron|input-cron|output-cron)" | grep -v grep
 
 **Directory Not Found Errors**
 
@@ -432,6 +553,7 @@ Lock files are now stored in a user-writable directory (``${TMPDIR:-/tmp}/rift-c
 
       sudo mkdir -p /var/abyss/dye
       sudo mkdir -p /var/abyss/input
+      sudo mkdir -p /var/abyss/output
 
 2. **Check directory permissions:**
 
