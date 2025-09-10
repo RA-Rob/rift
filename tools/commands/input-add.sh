@@ -6,6 +6,7 @@
 # Configuration variables - modify these paths as needed
 INPUT_SOURCE_DIR="${INPUT_SOURCE_DIR:-/var/abyss/input}"
 INPUT_TARGET_DIR="${INPUT_TARGET_DIR:-/data/io-service/input-undersluice-default}"
+INPUT_PROCESSED_DIR="${INPUT_PROCESSED_DIR:-${INPUT_SOURCE_DIR}/processed}"
 INPUT_OWNER_UID="${INPUT_OWNER_UID:-500}"
 INPUT_OWNER_GID="${INPUT_OWNER_GID:-500}"
 INPUT_PERMISSIONS="${INPUT_PERMISSIONS:-644}"
@@ -14,6 +15,32 @@ RIFT_USER="${RIFT_USER:-rift}"
 # Function to log messages with timestamp
 log_message() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1"
+}
+
+# Function to ensure processed directory exists
+ensure_processed_directory() {
+    if [ ! -d "$INPUT_PROCESSED_DIR" ]; then
+        log_message "Creating processed directory: $INPUT_PROCESSED_DIR"
+        if sudo mkdir -p "$INPUT_PROCESSED_DIR" 2>/dev/null; then
+            # Set ownership for the processed directory
+            if sudo chown "$INPUT_OWNER_UID:$INPUT_OWNER_GID" "$INPUT_PROCESSED_DIR" 2>/dev/null; then
+                log_message "Set ownership for processed directory: $INPUT_OWNER_UID:$INPUT_OWNER_GID"
+            else
+                log_message "WARNING: Failed to set ownership for processed directory"
+            fi
+            
+            # Set permissions for the processed directory
+            if sudo chmod 755 "$INPUT_PROCESSED_DIR" 2>/dev/null; then
+                log_message "Set permissions for processed directory: 755"
+            else
+                log_message "WARNING: Failed to set permissions for processed directory"
+            fi
+        else
+            log_message "ERROR: Failed to create processed directory: $INPUT_PROCESSED_DIR"
+            return 1
+        fi
+    fi
+    return 0
 }
 
 # Function to validate directories exist
@@ -27,6 +54,11 @@ validate_directories() {
     
     if [ ! -d "$INPUT_TARGET_DIR" ]; then
         log_message "ERROR: Target directory does not exist: $INPUT_TARGET_DIR"
+        errors=$((errors + 1))
+    fi
+    
+    # Ensure processed directory exists
+    if ! ensure_processed_directory; then
         errors=$((errors + 1))
     fi
     
@@ -66,7 +98,17 @@ copy_input_file() {
         # Atomic move from temp to final location
         if sudo mv "$temp_file" "$target_file" 2>/dev/null; then
             log_message "Atomically moved: $filename to $target_dir"
-            return 0
+            
+            # Move source file to processed directory after successful copy
+            local processed_file="$INPUT_PROCESSED_DIR/$filename"
+            if sudo mv "$source_file" "$processed_file" 2>/dev/null; then
+                log_message "Moved source file to processed directory: $filename"
+                return 0
+            else
+                log_message "WARNING: Failed to move source file to processed directory: $filename"
+                # Still return success since the main copy operation succeeded
+                return 0
+            fi
         else
             log_message "ERROR: Failed to move $filename to final location"
             sudo rm -f "$temp_file" 2>/dev/null
@@ -93,8 +135,7 @@ process_input_files() {
             
             # Copy to target directory with atomic operation
             if copy_input_file "$input_file" "$INPUT_TARGET_DIR"; then
-                # Note: Unlike dye files, we do NOT remove the source file
-                # as per the requirement "There is no need to delete the input files"
+                # Source file is moved to processed directory after successful copy
                 processed=$((processed + 1))
             else
                 errors=$((errors + 1))
@@ -124,7 +165,7 @@ show_usage() {
     echo "  Rift user: $RIFT_USER"
     echo
     echo "Note: Files are copied atomically to prevent early access by other processes."
-    echo "      Source files are preserved (not deleted after copying)."
+    echo "      Source files are moved to processed directory after successful copying."
 }
 
 # Main function to handle input-add command
