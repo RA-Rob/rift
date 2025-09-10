@@ -274,7 +274,7 @@ Remove dye files from target directories.
 input-add
 ~~~~~~~~~
 
-Add input files from source to target directory using atomic copy operations.
+Add input files from source to target directory using atomic copy operations. Successfully processed files are moved to a processed directory to prevent reprocessing.
 
 .. code-block:: bash
 
@@ -399,6 +399,9 @@ The following environment variables can be used to customize Rift behavior:
 
 ``INPUT_TARGET_DIR``
     Target directory for input files (default: ``/data/io-service/input-undersluice-default``)
+
+``INPUT_PROCESSED_DIR``
+    Directory where processed files are archived (default: ``${INPUT_SOURCE_DIR}/processed``)
 
 ``INPUT_OWNER_UID`` / ``INPUT_OWNER_GID``
     File ownership for input files (default: 500:500)

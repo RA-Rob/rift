@@ -152,6 +152,7 @@ The script uses the following configuration variables (all configurable via envi
    # Source and target directories
    INPUT_SOURCE_DIR="${INPUT_SOURCE_DIR:-/var/abyss/input}"
    INPUT_TARGET_DIR="${INPUT_TARGET_DIR:-/data/io-service/input-undersluice-default}"
+   INPUT_PROCESSED_DIR="${INPUT_PROCESSED_DIR:-${INPUT_SOURCE_DIR}/processed}"
    
    # File ownership and permissions
    INPUT_OWNER_UID="${INPUT_OWNER_UID:-500}"
@@ -169,20 +170,22 @@ Processing Workflow
 ~~~~~~~~~~~~~~~~~~~
 
 1. **Lock Acquisition**: Prevents concurrent execution
-2. **Directory Validation**: Ensures source and target directories exist
-3. **Sudo Verification**: Confirms passwordless sudo access
-4. **File Discovery**: Finds all files in source directory (any file type)
-5. **Atomic Processing**: Uses temporary files for atomic operations
-6. **Permission Setting**: Sets proper ownership and permissions
-7. **Source Preservation**: Keeps original files in source directory
-8. **Logging**: Records all operations with timestamps
+2. **Directory Validation**: Ensures source, target, and processed directories exist
+3. **Processed Directory Creation**: Auto-creates processed directory if needed
+4. **Sudo Verification**: Confirms passwordless sudo access
+5. **File Discovery**: Finds all files in source directory (any file type)
+6. **Atomic Processing**: Uses temporary files for atomic operations
+7. **Permission Setting**: Sets proper ownership and permissions
+8. **Source File Archival**: Moves original files to processed directory after successful copy
+9. **Logging**: Records all operations with timestamps
 
 Key Differences from Dye Processing
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 - **Single Target**: Copies to one target directory instead of two
 - **File Types**: Processes all file types, not just ``.dye`` files
-- **Source Preservation**: Does NOT delete source files after processing
+- **Source Archival**: Moves source files to processed directory (dye files are deleted)
+- **Reprocessing Prevention**: Processed directory prevents duplicate processing
 - **Atomic Operations**: Uses temporary files and atomic moves for safety
 - **Default User**: Uses ``rift`` user by default instead of ``ec2-user``
 

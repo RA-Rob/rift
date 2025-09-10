@@ -6,7 +6,7 @@ This document describes the input file management system integrated into the Rif
 Overview
 --------
 
-The input file management system provides tools for handling input files in the system. Input files are processed from a source directory and deployed to a target directory with specific ownership and permissions using atomic copy operations to prevent early access by other system processes.
+The input file management system provides tools for handling input files in the system. Input files are processed from a source directory and deployed to a target directory with specific ownership and permissions using atomic copy operations to prevent early access by other system processes. After successful processing, source files are moved to a processed directory to prevent reprocessing in subsequent runs.
 
 Directory Structure
 -------------------
@@ -22,6 +22,13 @@ Target Directory
 
 - **Path**: ``/data/io-service/input-undersluice-default`` (configurable via ``INPUT_TARGET_DIR`` environment variable)
 - **Purpose**: Destination directory where input files are atomically copied
+
+Processed Directory
+~~~~~~~~~~~~~~~~~~~
+
+- **Path**: ``/var/abyss/input/processed`` (configurable via ``INPUT_PROCESSED_DIR`` environment variable)
+- **Purpose**: Archive directory where successfully processed files are moved to prevent reprocessing
+- **Auto-creation**: Directory is automatically created with proper ownership and permissions if it doesn't exist
 
 File Properties
 ~~~~~~~~~~~~~~~
@@ -92,7 +99,7 @@ The ``input-add`` command:
 - Finds all files in the source directory (any file type)
 - Copies files atomically to prevent early access by other processes
 - Sets proper ownership and permissions on copied files
-- Preserves source files (does not delete them after copying)
+- Moves successfully processed files to the processed directory
 - Uses temporary files with atomic move operations for safety
 
 Atomic Copy Process
@@ -103,9 +110,10 @@ The input file management system ensures atomicity by:
 1. **Temporary File Creation**: Files are first copied to a temporary location with a unique name (``.filename.tmp.$$``)
 2. **Permission Setting**: Ownership and permissions are set on the temporary file
 3. **Atomic Move**: The temporary file is moved to the final location using ``mv``, which is atomic on most filesystems
-4. **Cleanup**: If any step fails, temporary files are cleaned up automatically
+4. **Source File Archival**: After successful copy, the original source file is moved to the processed directory
+5. **Cleanup**: If any step fails, temporary files are cleaned up automatically
 
-This process prevents other system processes from accessing incomplete or improperly configured files.
+This process prevents other system processes from accessing incomplete or improperly configured files, and ensures files are not processed multiple times.
 
 Configuration
 -------------
@@ -119,6 +127,9 @@ All configuration can be customized using environment variables:
 
    # Target directory for input files  
    export INPUT_TARGET_DIR="/custom/target/path"
+
+   # Processed directory for archived files (defaults to ${INPUT_SOURCE_DIR}/processed)
+   export INPUT_PROCESSED_DIR="/custom/processed/path"
 
    # File ownership (UID:GID)
    export INPUT_OWNER_UID=1000
@@ -135,11 +146,12 @@ Differences from Dye File Management
 
 The input file management system differs from dye file management in several key ways:
 
-1. **Source Preservation**: Input files are NOT deleted from the source directory after copying
+1. **Source Archival**: Input files are moved to a processed directory after copying (dye files are deleted)
 2. **Single Target**: Input files are copied to one target directory, not multiple
 3. **File Types**: Accepts all file types, not just ``.dye`` files
 4. **Atomic Operations**: Uses temporary files and atomic moves for enhanced safety
 5. **Default User**: Uses ``rift`` user by default instead of ``ec2-user``
+6. **Reprocessing Prevention**: Processed directory prevents files from being processed multiple times
 
 Automated Processing (Cron)
 ----------------------------
