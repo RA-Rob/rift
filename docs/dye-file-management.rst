@@ -170,7 +170,7 @@ Log Files
 
 - **Main Log**: ``/var/log/dye-processing.log``
 - **Log Rotation**: Automatic when file exceeds 10MB
-- **Lock Files**: ``/var/run/dye-cron.lock`` and ``/var/run/dye-cron.pid``
+- **Lock Files**: ``${TMPDIR:-/tmp}/rift-cron/dye-cron.lock`` and ``${TMPDIR:-/tmp}/rift-cron/dye-cron.pid``
 
 Configuration
 -------------
@@ -223,7 +223,7 @@ Common Issues
 1. **Permission Denied**: Ensure sudo access is properly configured and user is in sudoers
 2. **Sudo Password Prompts**: Configure passwordless sudo for automated operations
 3. **Ownership Changes Fail**: Verify sudo permissions for chown/chmod commands
-4. **Lock File Issues**: Remove stale lock files in ``/var/run/`` if script won't start
+4. **Lock File Issues**: Remove stale lock files in ``${TMPDIR:-/tmp}/rift-cron/`` if script won't start
 5. **Directory Not Found**: Verify all configured directory paths exist and are accessible via sudo
 6. **Cron Job Fails**: Ensure passwordless sudo is configured and test manually first
 

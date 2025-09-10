@@ -231,7 +231,7 @@ Monitoring Cron Jobs
    .. code-block:: bash
 
       ps aux | grep input-cron
-      cat /var/run/input-cron.pid 2>/dev/null
+      cat ${TMPDIR:-/tmp}/rift-cron/input-cron.pid 2>/dev/null
 
 4. **View recent processing activity**:
 

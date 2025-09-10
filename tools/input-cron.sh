@@ -22,8 +22,10 @@ MAX_LOG_SIZE=10485760  # 10MB in bytes
 
 # Script configuration
 SCRIPT_NAME="input-cron"
-LOCK_FILE="/var/run/${SCRIPT_NAME}.lock"
-PID_FILE="/var/run/${SCRIPT_NAME}.pid"
+# Use user-writable directory for lock and PID files
+LOCK_DIR="${TMPDIR:-/tmp}/rift-cron"
+LOCK_FILE="${LOCK_DIR}/${SCRIPT_NAME}.lock"
+PID_FILE="${LOCK_DIR}/${SCRIPT_NAME}.pid"
 
 # Function to log messages with timestamp
 log_message() {
@@ -49,8 +51,26 @@ rotate_log() {
     fi
 }
 
+# Function to ensure lock directory exists
+ensure_lock_directory() {
+    if [ ! -d "$LOCK_DIR" ]; then
+        if mkdir -p "$LOCK_DIR" 2>/dev/null; then
+            log_message "Created lock directory: $LOCK_DIR"
+        else
+            log_message "ERROR: Failed to create lock directory: $LOCK_DIR"
+            return 1
+        fi
+    fi
+    return 0
+}
+
 # Function to acquire lock
 acquire_lock() {
+    # Ensure lock directory exists first
+    if ! ensure_lock_directory; then
+        return 1
+    fi
+    
     if [ -f "$LOCK_FILE" ]; then
         local lock_pid=$(cat "$LOCK_FILE" 2>/dev/null)
         if [ -n "$lock_pid" ] && kill -0 "$lock_pid" 2>/dev/null; then

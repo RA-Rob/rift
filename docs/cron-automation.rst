@@ -306,15 +306,15 @@ Checking Cron Job Status
    ps aux | grep -E "(dye-cron|input-cron)"
    
    # Check PID files
-   cat /var/run/dye-cron.pid 2>/dev/null
-   cat /var/run/input-cron.pid 2>/dev/null
+   cat ${TMPDIR:-/tmp}/rift-cron/dye-cron.pid 2>/dev/null
+   cat ${TMPDIR:-/tmp}/rift-cron/input-cron.pid 2>/dev/null
 
 **Check Lock Files:**
 
 .. code-block:: bash
 
    # Check for active locks
-   ls -la /var/run/*-cron.lock 2>/dev/null
+   ls -la ${TMPDIR:-/tmp}/rift-cron/*-cron.lock 2>/dev/null
 
 Log Monitoring
 ~~~~~~~~~~~~~~
@@ -410,11 +410,13 @@ Common Issues
 
 **Lock File Issues**
 
+Lock files are now stored in a user-writable directory (``${TMPDIR:-/tmp}/rift-cron/``) to avoid permission issues. The scripts automatically create this directory if it doesn't exist.
+
 1. **Remove stale locks:**
 
    .. code-block:: bash
 
-      sudo rm -f /var/run/*-cron.lock /var/run/*-cron.pid
+      rm -f ${TMPDIR:-/tmp}/rift-cron/*-cron.lock ${TMPDIR:-/tmp}/rift-cron/*-cron.pid
 
 2. **Check for zombie processes:**
 
@@ -502,7 +504,7 @@ File Permissions
 
 - **Log Files**: Ensure log files are not world-readable if they contain sensitive information
 - **Script Files**: Ensure cron scripts are not writable by unauthorized users
-- **Lock Files**: Verify lock files are created with proper permissions
+- **Lock Files**: Verify lock files are created with proper permissions in user-writable directory
 
 Network Security
 ~~~~~~~~~~~~~~~~
