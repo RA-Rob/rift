@@ -201,32 +201,32 @@ Installation and Setup
 
 **Step 2: Configure Passwordless Sudo**
 
-Add the following to ``/etc/sudoers`` for the ``rift`` user (or your ``RIFT_USER``):
+Add the following to ``/etc/sudoers`` for the ``ec2-user`` (or your ``RIFT_USER``):
 
 .. code-block:: bash
 
    # For specific commands (recommended)
-   rift ALL=(ALL) NOPASSWD: /bin/cp, /bin/mv, /bin/rm, /bin/chown, /bin/chmod, /usr/bin/find, /usr/bin/stat, /usr/bin/test
+   ec2-user ALL=(ALL) NOPASSWD: /bin/cp, /bin/mv, /bin/rm, /bin/chown, /bin/chmod, /usr/bin/find, /usr/bin/stat, /usr/bin/test
    
    # Or for broader access (less secure)
-   rift ALL=(ALL) NOPASSWD: ALL
+   ec2-user ALL=(ALL) NOPASSWD: ALL
 
 **Step 3: Set Up Log File**
 
 .. code-block:: bash
 
    sudo touch /var/log/input-processing.log
-   sudo chown rift:rift /var/log/input-processing.log
+   sudo chown ec2-user:ec2-user /var/log/input-processing.log
    sudo chmod 644 /var/log/input-processing.log
 
 **Step 4: Install Cron Job**
 
-Switch to the rift user and add the cron job:
+Switch to the ec2-user and add the cron job:
 
 .. code-block:: bash
 
-   # Switch to the rift user
-   sudo -u rift crontab -e
+   # Switch to the ec2-user
+   sudo -u ec2-user crontab -e
    
    # Add this line to run every 5 minutes
    */5 * * * * /usr/local/bin/input-cron.sh >> /var/log/input-processing.log 2>&1
@@ -272,7 +272,7 @@ To use custom environment variables in cron, add them to the crontab:
 .. code-block:: bash
 
    # Edit crontab
-   sudo -u rift crontab -e
+   sudo -u ec2-user crontab -e
    
    # Add environment variables at the top
    INPUT_SOURCE_DIR=/custom/source
@@ -295,8 +295,8 @@ Checking Cron Job Status
    # For dye processing (ec2-user)
    sudo -u ec2-user crontab -l
    
-   # For input processing (rift user)
-   sudo -u rift crontab -l
+   # For input processing (ec2-user)
+   sudo -u ec2-user crontab -l
 
 **Check Running Processes:**
 

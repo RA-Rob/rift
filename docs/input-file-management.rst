@@ -185,14 +185,14 @@ Cron Setup
    .. code-block:: bash
 
       sudo touch /var/log/input-processing.log
-      sudo chown rift:rift /var/log/input-processing.log
+      sudo chown ec2-user:ec2-user /var/log/input-processing.log
 
-3. **Add cron job for the rift user**:
+3. **Add cron job for the ec2-user**:
 
    .. code-block:: bash
 
-      # Switch to rift user and edit crontab
-      sudo -u rift crontab -e
+      # Switch to ec2-user and edit crontab
+      sudo -u ec2-user crontab -e
       
       # Add this line to run every 5 minutes
       */5 * * * * /usr/local/bin/input-cron.sh >> /var/log/input-processing.log 2>&1
@@ -218,7 +218,7 @@ Monitoring Cron Jobs
 
    .. code-block:: bash
 
-      sudo -u rift crontab -l
+      sudo -u ec2-user crontab -l
 
 2. **Monitor log file**:
 
