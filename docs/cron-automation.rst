@@ -263,9 +263,20 @@ The script uses the following configuration variables (all configurable via envi
    # User configuration
    RIFT_USER="${RIFT_USER:-rift}"
    
+   # File expiration configuration (IMPORTANT)
+   FILE_EXPIRATION_HOURS="${FILE_EXPIRATION_HOURS:-24}"
+   
    # Logging
    LOG_FILE="/var/log/output-processing.log"
    MAX_LOG_SIZE=10485760  # 10MB
+
+.. warning::
+   **File Expiration Policy**: The output cron script automatically deletes files older than 24 hours (configurable via ``FILE_EXPIRATION_HOURS``) from:
+   
+   - ``/var/abyss/output`` (target directory)
+   - ``/var/abyss/input/processed`` (processed input files)
+   
+   This is done to save disk space. Files are **permanently deleted** and cannot be recovered. If you need to retain files longer than 24 hours, set ``FILE_EXPIRATION_HOURS`` to a higher value or back up important files before they expire.
 
 Processing Workflow
 ~~~~~~~~~~~~~~~~~~~
@@ -278,7 +289,8 @@ Processing Workflow
 6. **Atomic Processing**: Uses temporary files for atomic operations
 7. **Permission Setting**: Sets proper ownership and permissions
 8. **Source File Archival**: Moves original files to processed directory after successful copy
-9. **Logging**: Records all operations with timestamps
+9. **File Expiration Cleanup**: Deletes files older than configured threshold (default 24 hours) from target and processed directories
+10. **Logging**: Records all operations with timestamps
 
 Key Features
 ~~~~~~~~~~~~
@@ -383,6 +395,9 @@ All scripts support environment variable customization:
    # Custom permissions
    export OUTPUT_PERMISSIONS=755
    
+   # Custom file expiration (hours)
+   export FILE_EXPIRATION_HOURS=48  # Keep files for 48 hours instead of default 24
+   
    # Custom user
    export RIFT_USER=myuser
 
@@ -396,6 +411,7 @@ To use custom environment variables in cron, add them to the crontab:
    # Add environment variables at the top
    INPUT_SOURCE_DIR=/custom/source
    INPUT_TARGET_DIR=/custom/target
+   FILE_EXPIRATION_HOURS=48
    RIFT_USER=myuser
    
    # Then add the cron jobs

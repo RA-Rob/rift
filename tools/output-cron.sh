@@ -16,6 +16,12 @@ OUTPUT_OWNER_GID="${OUTPUT_OWNER_GID:-500}"
 OUTPUT_PERMISSIONS="${OUTPUT_PERMISSIONS:-644}"
 RIFT_USER="${RIFT_USER:-rift}"
 
+# File expiration configuration
+# Files older than this many hours will be deleted to save disk space
+# WARNING: Files in OUTPUT_TARGET_DIR and /var/abyss/input/processed older than 
+# this threshold will be permanently deleted
+FILE_EXPIRATION_HOURS="${FILE_EXPIRATION_HOURS:-24}"
+
 # Logging configuration
 LOG_FILE="/var/log/output-processing.log"
 MAX_LOG_SIZE=10485760  # 10MB in bytes
@@ -235,6 +241,54 @@ process_output_files() {
     return $errors
 }
 
+# Function to cleanup expired files to save disk space
+cleanup_expired_files() {
+    local deleted_output=0
+    local deleted_processed=0
+    local errors=0
+    
+    log_message "Starting file expiration cleanup (files older than $FILE_EXPIRATION_HOURS hours)"
+    
+    # Clean up expired files in output target directory
+    if [ -d "$OUTPUT_TARGET_DIR" ]; then
+        log_message "Cleaning expired files in: $OUTPUT_TARGET_DIR"
+        while IFS= read -r -d '' expired_file; do
+            local filename=$(basename "$expired_file")
+            if sudo rm -f "$expired_file" 2>/dev/null; then
+                log_message "Deleted expired output file: $filename"
+                deleted_output=$((deleted_output + 1))
+            else
+                log_message "ERROR: Failed to delete expired output file: $filename"
+                errors=$((errors + 1))
+            fi
+        done < <(find "$OUTPUT_TARGET_DIR" -type f -mtime +0 -mmin +$((FILE_EXPIRATION_HOURS * 60)) -print0 2>/dev/null)
+    else
+        log_message "WARNING: Output target directory does not exist: $OUTPUT_TARGET_DIR"
+    fi
+    
+    # Clean up expired files in input processed directory
+    local input_processed_dir="/var/abyss/input/processed"
+    if [ -d "$input_processed_dir" ]; then
+        log_message "Cleaning expired files in: $input_processed_dir"
+        while IFS= read -r -d '' expired_file; do
+            local filename=$(basename "$expired_file")
+            if sudo rm -f "$expired_file" 2>/dev/null; then
+                log_message "Deleted expired processed input file: $filename"
+                deleted_processed=$((deleted_processed + 1))
+            else
+                log_message "ERROR: Failed to delete expired processed input file: $filename"
+                errors=$((errors + 1))
+            fi
+        done < <(find "$input_processed_dir" -type f -mtime +0 -mmin +$((FILE_EXPIRATION_HOURS * 60)) -print0 2>/dev/null)
+    else
+        log_message "WARNING: Input processed directory does not exist: $input_processed_dir"
+    fi
+    
+    log_message "File expiration cleanup complete. Output files deleted: $deleted_output, Processed input files deleted: $deleted_processed, Errors: $errors"
+    
+    return $errors
+}
+
 # Function to check system health
 check_system_health() {
     local warnings=0
@@ -290,9 +344,19 @@ main() {
     # Process output files
     if process_output_files; then
         log_message "Output file processing completed successfully"
-        cleanup_and_exit 0
     else
         log_message "Output file processing completed with errors"
+    fi
+    
+    # Clean up expired files to save disk space
+    cleanup_expired_files
+    
+    # Exit with appropriate code
+    if [ $? -eq 0 ]; then
+        log_message "All operations completed successfully"
+        cleanup_and_exit 0
+    else
+        log_message "Some operations completed with errors"
         cleanup_and_exit 1
     fi
 }
