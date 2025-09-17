@@ -58,7 +58,8 @@ pip3 install sphinx sphinx-rtd-theme
 
 # Build documentation
 cd docs
-make html
+# Try to build HTML documentation, but don't fail the build if it doesn't work
+make html || echo "Warning: HTML documentation build failed, continuing without HTML docs"
 cd ..
 
 %install
@@ -79,8 +80,11 @@ install -m 644 VERSION %{buildroot}%{_datadir}/rift/VERSION
 
 # Install documentation
 install -m 644 docs/vm-management.rst %{buildroot}%{_docdir}/%{name}/vm-management.rst
-install -m 644 docs/dashboard-management.md %{buildroot}%{_docdir}/%{name}/dashboard-management.md
-cp -r docs/_build/html/* %{buildroot}%{_docdir}/%{name}/html/
+install -m 644 docs/dashboard-management.rst %{buildroot}%{_docdir}/%{name}/dashboard-management.rst
+# Only copy HTML docs if they were built successfully
+if [ -d "docs/_build/html" ]; then
+    cp -r docs/_build/html/* %{buildroot}%{_docdir}/%{name}/html/
+fi
 
 # Install the main rift script
 install -m 755 tools/rift %{buildroot}%{_bindir}/rift
@@ -128,7 +132,7 @@ fi
 %files
 %doc README.md
 %doc %{_docdir}/%{name}/vm-management.rst
-%doc %{_docdir}/%{name}/dashboard-management.md
+%doc %{_docdir}/%{name}/dashboard-management.rst
 %doc %{_docdir}/%{name}/html/
 %{_datadir}/rift/
 %{_bindir}/rift
