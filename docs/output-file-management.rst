@@ -9,7 +9,7 @@ Overview
 The output file management system provides tools for handling output files in the system. Output files are processed from a source directory and deployed to a target directory with specific ownership and permissions using atomic copy operations to prevent early access by other system processes. After successful processing, source files are moved to a processed directory to prevent reprocessing in subsequent runs.
 
 .. warning::
-   **File Expiration Policy**: Files in ``/var/abyss/output`` and ``/var/abyss/input/processed`` are automatically deleted after 24 hours (configurable) to save disk space. This expiration process runs with the output cron job and **permanently deletes files** that cannot be recovered. If you need longer retention, configure ``FILE_EXPIRATION_HOURS`` to a higher value or implement your own backup strategy.
+   **File Expiration Policy**: Files in ``/var/abyss/output`` are automatically deleted after 24 hours (configurable) to save disk space. This expiration process runs with the output cron job and **permanently deletes files** that cannot be recovered. If you need longer retention, configure ``FILE_EXPIRATION_HOURS`` to a higher value or implement your own backup strategy.
 
 Directory Structure
 -------------------
@@ -290,7 +290,7 @@ File Workflow
 3. **Deployment**: Files are copied to ``/var/abyss/output`` with atomic operations
 4. **Archival**: Source files are moved to processed directory after successful deployment
 5. **Consumption**: Target applications can safely consume files from ``/var/abyss/output``
-6. **Expiration**: Files older than configured threshold (default 24 hours) are automatically deleted from target and processed directories
+6. **Expiration**: Files older than configured threshold (default 24 hours) are automatically deleted from target directory
 7. **Logging**: All operations are logged with timestamps
 
 This system ensures reliable, automated processing of output files with comprehensive logging and error handling, preventing data loss and ensuring files are available for downstream consumption. The automatic expiration helps maintain disk space by removing old files.

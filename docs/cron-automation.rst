@@ -163,9 +163,15 @@ The script uses the following configuration variables (all configurable via envi
    # User configuration
    RIFT_USER="${RIFT_USER:-rift}"
    
+   # File expiration configuration
+   FILE_EXPIRATION_HOURS="${FILE_EXPIRATION_HOURS:-24}"
+   
    # Logging
    LOG_FILE="/var/log/input-processing.log"
    MAX_LOG_SIZE=10485760  # 10MB
+
+.. warning::
+   **File Expiration Policy**: The input cron script automatically deletes processed input files older than 24 hours (configurable via ``FILE_EXPIRATION_HOURS``) from the processed directory (``${INPUT_SOURCE_DIR}/processed``). This is done to save disk space. Files are **permanently deleted** and cannot be recovered. If you need to retain files longer than 24 hours, set ``FILE_EXPIRATION_HOURS`` to a higher value or back up important files before they expire.
 
 Processing Workflow
 ~~~~~~~~~~~~~~~~~~~
@@ -178,7 +184,8 @@ Processing Workflow
 6. **Atomic Processing**: Uses temporary files for atomic operations
 7. **Permission Setting**: Sets proper ownership and permissions
 8. **Source File Archival**: Moves original files to processed directory after successful copy
-9. **Logging**: Records all operations with timestamps
+9. **File Expiration Cleanup**: Deletes processed files older than configured threshold (default 24 hours)
+10. **Logging**: Records all operations with timestamps
 
 Key Differences from Dye Processing
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -271,12 +278,7 @@ The script uses the following configuration variables (all configurable via envi
    MAX_LOG_SIZE=10485760  # 10MB
 
 .. warning::
-   **File Expiration Policy**: The output cron script automatically deletes files older than 24 hours (configurable via ``FILE_EXPIRATION_HOURS``) from:
-   
-   - ``/var/abyss/output`` (target directory)
-   - ``/var/abyss/input/processed`` (processed input files)
-   
-   This is done to save disk space. Files are **permanently deleted** and cannot be recovered. If you need to retain files longer than 24 hours, set ``FILE_EXPIRATION_HOURS`` to a higher value or back up important files before they expire.
+   **File Expiration Policy**: The output cron script automatically deletes files older than 24 hours (configurable via ``FILE_EXPIRATION_HOURS``) from the output target directory (``/var/abyss/output``). This is done to save disk space. Files are **permanently deleted** and cannot be recovered. If you need to retain files longer than 24 hours, set ``FILE_EXPIRATION_HOURS`` to a higher value or back up important files before they expire.
 
 Processing Workflow
 ~~~~~~~~~~~~~~~~~~~
@@ -289,7 +291,7 @@ Processing Workflow
 6. **Atomic Processing**: Uses temporary files for atomic operations
 7. **Permission Setting**: Sets proper ownership and permissions
 8. **Source File Archival**: Moves original files to processed directory after successful copy
-9. **File Expiration Cleanup**: Deletes files older than configured threshold (default 24 hours) from target and processed directories
+9. **File Expiration Cleanup**: Deletes files older than configured threshold (default 24 hours) from output target directory
 10. **Logging**: Records all operations with timestamps
 
 Key Features
@@ -377,6 +379,9 @@ All scripts support environment variable customization:
    # Custom permissions
    export INPUT_PERMISSIONS=755
    
+   # Custom file expiration (hours)
+   export FILE_EXPIRATION_HOURS=48  # Keep processed files for 48 hours instead of default 24
+   
    # Custom user
    export RIFT_USER=myuser
 
@@ -431,8 +436,11 @@ Checking Cron Job Status
    # For dye processing (ec2-user)
    sudo -u ec2-user crontab -l
    
-   # For input processing (ec2-user)
-   sudo -u ec2-user crontab -l
+   # For input processing (rift user)
+   sudo -u rift crontab -l
+   
+   # For output processing (rift user)
+   sudo -u rift crontab -l
 
 **Check Running Processes:**
 
@@ -465,6 +473,9 @@ Log Monitoring
    
    # Input file processing
    tail -f /var/log/input-processing.log
+   
+   # Output file processing
+   tail -f /var/log/output-processing.log
 
 **View Recent Activity:**
 
@@ -475,6 +486,9 @@ Log Monitoring
    
    # Today's input processing activity
    grep "$(date '+%Y-%m-%d')" /var/log/input-processing.log
+   
+   # Today's output processing activity
+   grep "$(date '+%Y-%m-%d')" /var/log/output-processing.log
 
 **Check Log File Sizes:**
 
@@ -494,6 +508,9 @@ Test the cron scripts manually before installing them:
    
    # Test input cron script
    /usr/local/bin/input-cron.sh
+   
+   # Test output cron script
+   /usr/local/bin/output-cron.sh
    
    # Test with custom environment
    RIFT_USER=testuser /usr/local/bin/input-cron.sh
@@ -687,8 +704,8 @@ Integration with Rift Commands
 
 The cron scripts complement the manual Rift commands:
 
-- **Manual processing**: Use ``rift dye-add`` and ``rift input-add`` for immediate processing
+- **Manual processing**: Use ``rift dye-add``, ``rift input-add``, and ``rift output-add`` for immediate processing
 - **Automated processing**: Use cron scripts for continuous, hands-free operation
 - **Monitoring**: Use both manual commands and log files for status checking
 
-See :doc:`dye-file-management` and :doc:`input-file-management` for manual command documentation.
+See :doc:`dye-file-management`, :doc:`input-file-management`, and :doc:`output-file-management` for manual command documentation.

@@ -8,6 +8,9 @@ Overview
 
 The input file management system provides tools for handling input files in the system. Input files are processed from a source directory and deployed to a target directory with specific ownership and permissions using atomic copy operations to prevent early access by other system processes. After successful processing, source files are moved to a processed directory to prevent reprocessing in subsequent runs.
 
+.. warning::
+   **File Expiration Policy**: Processed input files are automatically deleted after 24 hours (configurable) to save disk space. This expiration process runs with the input cron job and **permanently deletes files** from the processed directory that cannot be recovered. If you need longer retention, configure ``FILE_EXPIRATION_HOURS`` to a higher value or implement your own backup strategy.
+
 Directory Structure
 -------------------
 
@@ -138,6 +141,9 @@ All configuration can be customized using environment variables:
    # File permissions (octal)
    export INPUT_PERMISSIONS=755
 
+   # File expiration (hours) - for processed files cleanup
+   export FILE_EXPIRATION_HOURS=48  # Keep processed files for 48 hours instead of default 24
+
    # User running the script
    export RIFT_USER=myuser
 
@@ -167,6 +173,7 @@ Cron Script Features
 - **Lock-based execution**: Prevents multiple instances from running simultaneously
 - **Log rotation**: Automatically rotates log files when they exceed 10MB
 - **System health checks**: Validates sudo access and disk space
+- **File expiration cleanup**: Automatically deletes processed files older than configured threshold (default 24 hours)
 - **Comprehensive logging**: Detailed logging with timestamps to ``/var/log/input-processing.log``
 - **Signal handling**: Graceful cleanup on script termination
 

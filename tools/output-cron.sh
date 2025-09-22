@@ -18,8 +18,7 @@ RIFT_USER="${RIFT_USER:-rift}"
 
 # File expiration configuration
 # Files older than this many hours will be deleted to save disk space
-# WARNING: Files in OUTPUT_TARGET_DIR and /var/abyss/input/processed older than 
-# this threshold will be permanently deleted
+# WARNING: Files in OUTPUT_TARGET_DIR older than this threshold will be permanently deleted
 FILE_EXPIRATION_HOURS="${FILE_EXPIRATION_HOURS:-24}"
 
 # Logging configuration
@@ -244,7 +243,6 @@ process_output_files() {
 # Function to cleanup expired files to save disk space
 cleanup_expired_files() {
     local deleted_output=0
-    local deleted_processed=0
     local errors=0
     
     log_message "Starting file expiration cleanup (files older than $FILE_EXPIRATION_HOURS hours)"
@@ -266,25 +264,7 @@ cleanup_expired_files() {
         log_message "WARNING: Output target directory does not exist: $OUTPUT_TARGET_DIR"
     fi
     
-    # Clean up expired files in input processed directory
-    local input_processed_dir="/var/abyss/input/processed"
-    if [ -d "$input_processed_dir" ]; then
-        log_message "Cleaning expired files in: $input_processed_dir"
-        while IFS= read -r -d '' expired_file; do
-            local filename=$(basename "$expired_file")
-            if sudo rm -f "$expired_file" 2>/dev/null; then
-                log_message "Deleted expired processed input file: $filename"
-                deleted_processed=$((deleted_processed + 1))
-            else
-                log_message "ERROR: Failed to delete expired processed input file: $filename"
-                errors=$((errors + 1))
-            fi
-        done < <(find "$input_processed_dir" -type f -mtime +0 -mmin +$((FILE_EXPIRATION_HOURS * 60)) -print0 2>/dev/null)
-    else
-        log_message "WARNING: Input processed directory does not exist: $input_processed_dir"
-    fi
-    
-    log_message "File expiration cleanup complete. Output files deleted: $deleted_output, Processed input files deleted: $deleted_processed, Errors: $errors"
+    log_message "File expiration cleanup complete. Output files deleted: $deleted_output, Errors: $errors"
     
     return $errors
 }

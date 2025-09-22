@@ -16,6 +16,11 @@ INPUT_OWNER_GID="${INPUT_OWNER_GID:-500}"
 INPUT_PERMISSIONS="${INPUT_PERMISSIONS:-644}"
 RIFT_USER="${RIFT_USER:-rift}"
 
+# File expiration configuration
+# Files older than this many hours will be deleted to save disk space
+# WARNING: Files in INPUT_PROCESSED_DIR older than this threshold will be permanently deleted
+FILE_EXPIRATION_HOURS="${FILE_EXPIRATION_HOURS:-24}"
+
 # Logging configuration
 LOG_FILE="/var/log/input-processing.log"
 MAX_LOG_SIZE=10485760  # 10MB in bytes
@@ -235,6 +240,35 @@ process_input_files() {
     return $errors
 }
 
+# Function to cleanup expired files to save disk space
+cleanup_expired_input_files() {
+    local deleted_processed=0
+    local errors=0
+    
+    log_message "Starting input file expiration cleanup (files older than $FILE_EXPIRATION_HOURS hours)"
+    
+    # Clean up expired files in input processed directory
+    if [ -d "$INPUT_PROCESSED_DIR" ]; then
+        log_message "Cleaning expired files in: $INPUT_PROCESSED_DIR"
+        while IFS= read -r -d '' expired_file; do
+            local filename=$(basename "$expired_file")
+            if sudo rm -f "$expired_file" 2>/dev/null; then
+                log_message "Deleted expired processed input file: $filename"
+                deleted_processed=$((deleted_processed + 1))
+            else
+                log_message "ERROR: Failed to delete expired processed input file: $filename"
+                errors=$((errors + 1))
+            fi
+        done < <(find "$INPUT_PROCESSED_DIR" -type f -mtime +0 -mmin +$((FILE_EXPIRATION_HOURS * 60)) -print0 2>/dev/null)
+    else
+        log_message "WARNING: Input processed directory does not exist: $INPUT_PROCESSED_DIR"
+    fi
+    
+    log_message "Input file expiration cleanup complete. Processed input files deleted: $deleted_processed, Errors: $errors"
+    
+    return $errors
+}
+
 # Function to check system health
 check_system_health() {
     local warnings=0
@@ -290,9 +324,19 @@ main() {
     # Process input files
     if process_input_files; then
         log_message "Input file processing completed successfully"
-        cleanup_and_exit 0
     else
         log_message "Input file processing completed with errors"
+    fi
+    
+    # Clean up expired files to save disk space
+    cleanup_expired_input_files
+    
+    # Exit with appropriate code
+    if [ $? -eq 0 ]; then
+        log_message "All operations completed successfully"
+        cleanup_and_exit 0
+    else
+        log_message "Some operations completed with errors"
         cleanup_and_exit 1
     fi
 }
