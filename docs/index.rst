@@ -16,6 +16,17 @@ Rift is an Ansible-based automation tool for managing and deploying infrastructu
    getting-started
    user-guide
    command-reference
+
+.. toctree::
+   :maxdepth: 2
+   :caption: How-To Guides:
+
+   user-file-processing-guide
+
+.. toctree::
+   :maxdepth: 2
+   :caption: System Management:
+
    vm-management
    dashboard-management
    dye-file-management
@@ -23,6 +34,11 @@ Rift is an Ansible-based automation tool for managing and deploying infrastructu
    output-file-management
    cron-automation
    smoke-test
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Development:
+
    api-reference
    development
    contributing
