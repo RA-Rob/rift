@@ -1,5 +1,9 @@
 # Rift
 
+<div align="center">
+  <img src="docs/images/rift-dalle-logo-pack/icons/rift-dalle-256.png" alt="Rift Logo" width="200">
+</div>
+
 [![Build RPM](https://github.com/RA-Rob/rift/actions/workflows/build-rpm.yml/badge.svg)](https://github.com/RA-Rob/rift/actions/workflows/build-rpm.yml)
 [![Test Build](https://github.com/RA-Rob/rift/actions/workflows/test-build.yml/badge.svg)](https://github.com/RA-Rob/rift/actions/workflows/test-build.yml)
 [![Documentation Build](https://github.com/RA-Rob/rift/actions/workflows/docs.yml/badge.svg)](https://github.com/RA-Rob/rift/actions/workflows/docs.yml)

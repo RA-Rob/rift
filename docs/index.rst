@@ -6,6 +6,11 @@
 Welcome to Rift's documentation!
 ===============================
 
+.. image:: images/rift-dalle-logo-pack/icons/rift-dalle-256.png
+   :alt: Rift Logo
+   :align: center
+   :width: 200px
+
 Rift is an Ansible-based automation tool for managing and deploying infrastructure.
 
 .. toctree::
