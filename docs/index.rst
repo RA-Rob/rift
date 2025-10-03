@@ -6,7 +6,7 @@
 Welcome to Rift's documentation!
 ===============================
 
-.. image:: images/rift-dalle-logo-pack/icons/rift-dalle-256.png
+.. image:: images/Rift-Logo-50.svg
    :alt: Rift Logo
    :align: center
    :width: 200px

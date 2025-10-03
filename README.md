@@ -1,7 +1,7 @@
 # Rift
 
 <div align="center">
-  <img src="docs/images/rift-dalle-logo-pack/icons/rift-dalle-256.png" alt="Rift Logo" width="200">
+  <img src="docs/images/Rift-Logo-50.svg" alt="Rift Logo" width="200">
 </div>
 
 [![Build RPM](https://github.com/RA-Rob/rift/actions/workflows/build-rpm.yml/badge.svg)](https://github.com/RA-Rob/rift/actions/workflows/build-rpm.yml)
